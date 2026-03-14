@@ -1,0 +1,49 @@
+{
+  "name": "devpilot",
+  "version": "0.1.0",
+  "description": "Remote dev session dashboard. Monitor and interact with your terminal sessions from your phone.",
+  "type": "module",
+  "main": "dist/cli.js",
+  "bin": {
+    "devpilot": "bin/devpilot"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write 'src/**/*.ts'",
+    "format:check": "prettier --check 'src/**/*.ts'",
+    "postinstall": "chmod +x node_modules/node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true"
+  },
+  "keywords": [
+    "terminal",
+    "remote",
+    "pty",
+    "dashboard",
+    "mobile"
+  ],
+  "author": "Thoughtminers",
+  "license": "MIT",
+  "dependencies": {
+    "@fastify/static": "^9.0.0",
+    "@fastify/websocket": "^11.2.0",
+    "commander": "^14.0.3",
+    "diff2html": "^3.4.56",
+    "fastify": "^5.8.2",
+    "highlight.js": "^11.11.1",
+    "node-pty": "^1.1.0",
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@types/ws": "^8.18.1",
+    "@typescript-eslint/eslint-plugin": "^8.57.0",
+    "@typescript-eslint/parser": "^8.57.0",
+    "eslint": "^10.0.3",
+    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3"
+  }
+}
