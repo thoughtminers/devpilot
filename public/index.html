@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>devpilot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5/css/xterm.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0D1117;
+      color: #C9D1D9;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Top Bar ── */
+    .top-bar {
+      background: #161B22;
+      border-bottom: 1px solid #30363D;
+      padding: 12px 16px;
+      padding-top: max(12px, env(safe-area-inset-top));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 50;
+    }
+
+    .session-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #238636;
+      box-shadow: 0 0 8px rgba(35, 134, 54, 0.6);
+      animation: pulse 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    .status-dot.disconnected {
+      background: #F85149;
+      box-shadow: 0 0 8px rgba(248, 81, 73, 0.6);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .project-selector {
+      background: transparent;
+      border: 1px solid #30363D;
+      border-radius: 6px;
+      padding: 6px 12px;
+      color: #C9D1D9;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .project-selector:hover {
+      background: #21262D;
+      border-color: #58A6FF;
+    }
+
+    .project-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .project-icon { color: #58A6FF; flex-shrink: 0; }
+    .dropdown-icon { color: #8B949E; font-size: 12px; margin-left: auto; flex-shrink: 0; }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: #8B949E;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px;
+      transition: color 0.2s ease;
+    }
+
+    .icon-btn:hover { color: #58A6FF; }
+
+    /* Session dropdown */
+    .session-dropdown {
+      display: none;
+      position: absolute;
+      top: 52px;
+      left: 16px;
+      right: 16px;
+      background: #161B22;
+      border: 1px solid #30363D;
+      border-radius: 8px;
+      z-index: 100;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .session-dropdown.open { display: block; }
+
+    .session-option {
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid #21262D;
+      transition: background 0.2s ease;
+    }
+
+    .session-option:hover { background: #21262D; }
+    .session-option:last-child { border-bottom: none; }
+
+    .session-option-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: #C9D1D9;
+      margin-bottom: 2px;
+    }
+
+    .session-option-meta {
+      font-size: 11px;
+      color: #8B949E;
+    }
+
+    /* ── Content Area ── */
+    .content-area {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .view {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .view.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ── Terminal View ── */
+    #terminal-container {
+      flex: 1;
+      padding: 4px;
+      background: #0D1117;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .xterm { height: 100%; }
+
+    /* ── Diffs View ── */
+    .diffs-view {
+      overflow-y: auto;
+      background: #0D1117;
+      height: 100%;
+    }
+
+    .diff-header {
+      padding: 16px;
+      background: #161B22;
+      border-bottom: 1px solid #30363D;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .diff-stats {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+
+    .stat-value {
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stat-additions { color: #238636; }
+    .stat-deletions { color: #F85149; }
+    .stat-files { color: #58A6FF; }
+
+    .diff-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .refresh-btn {
+      background: #21262D;
+      border: 1px solid #30363D;
+      border-radius: 6px;
+      padding: 8px 14px;
+      color: #C9D1D9;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .refresh-btn:hover {
+      background: #30363D;
+      border-color: #58A6FF;
+    }
+
+    .diff-files-list {
+      padding: 12px 16px 100px 16px;
+    }
+
+    .diff-file-card {
+      background: #161B22;
+      border: 1px solid #30363D;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s ease;
+    }
+
+    .diff-file-card:hover { border-color: #484F58; }
+    .diff-file-card.expanded { border-color: #58A6FF; }
+
+    .diff-file-header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .diff-file-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .diff-file-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: #C9D1D9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .diff-file-status {
+      font-size: 11px;
+      color: #8B949E;
+      margin-top: 2px;
+    }
+
+    .diff-file-changes {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 12px;
+      flex-shrink: 0;
+    }
+
+    .change-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .additions { color: #238636; }
+    .deletions { color: #F85149; }
+
+    .diff-file-content {
+      display: none;
+      background: #0D1117;
+      border-top: 1px solid #30363D;
+      padding: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      overflow-x: auto;
+    }
+
+    .diff-file-card.expanded .diff-file-content { display: block; }
+
+    .diff-line {
+      padding: 2px 12px;
+      white-space: pre;
+    }
+
+    .diff-line-add {
+      background: rgba(35, 134, 54, 0.15);
+      color: #C9D1D9;
+    }
+
+    .diff-line-del {
+      background: rgba(248, 81, 73, 0.15);
+      color: #C9D1D9;
+    }
+
+    .diff-line-hunk {
+      background: rgba(88, 166, 255, 0.1);
+      color: #58A6FF;
+    }
+
+    .diff-line-context { color: #8B949E; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #8B949E;
+    }
+
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+    }
+
+    /* ── Files View ── */
+    .files-view {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: #0D1117;
+    }
+
+    .files-header {
+      background: #161B22;
+      border-bottom: 1px solid #30363D;
+      padding: 12px 16px;
+      flex-shrink: 0;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #8B949E;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .breadcrumb-item { color: #58A6FF; }
+    .breadcrumb-separator { color: #484F58; }
+
+    .file-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0 100px 0;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      border-bottom: 1px solid #21262D;
+    }
+
+    .file-item:hover { background: #161B22; }
+
+    .file-item-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: #21262D;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      flex-shrink: 0;
+      font-size: 14px;
+    }
+
+    .file-item-icon.folder-icon { color: #58A6FF; }
+    .file-item-icon.file-icon { color: #8B949E; }
+    .file-item-icon.ts-icon { color: #3178C6; }
+    .file-item-icon.js-icon { color: #F1E05A; }
+    .file-item-icon.json-icon { color: #89E051; }
+    .file-item-icon.md-icon { color: #C9D1D9; }
+    .file-item-icon.css-icon { color: #563D7C; }
+    .file-item-icon.html-icon { color: #E34C26; }
+
+    .file-item-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .file-item-name {
+      font-size: 14px;
+      color: #C9D1D9;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-item-meta {
+      font-size: 11px;
+      color: #8B949E;
+      margin-top: 2px;
+    }
+
+    .file-item-chevron {
+      color: #8B949E;
+      font-size: 12px;
+      margin-left: auto;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+
+    .file-item.expanded .file-item-chevron { transform: rotate(90deg); }
+
+    .nested-files {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .nested-files.open { max-height: 5000px; }
+
+    .nested-files .file-item { padding-left: 44px; }
+    .nested-files .nested-files .file-item { padding-left: 72px; }
+    .nested-files .nested-files .nested-files .file-item { padding-left: 100px; }
+
+    /* File viewer */
+    .file-viewer {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .file-viewer.active { display: flex; }
+    .file-tree-container.hidden { display: none; }
+
+    .file-viewer-header {
+      background: #161B22;
+      border-bottom: 1px solid #30363D;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .file-viewer-back {
+      background: transparent;
+      border: none;
+      color: #58A6FF;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+    }
+
+    .file-viewer-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: #C9D1D9;
+    }
+
+    .file-viewer-content {
+      flex: 1;
+      overflow: auto;
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      color: #C9D1D9;
+      background: #0D1117;
+    }
+
+    /* ── Bottom Navigation ── */
+    .bottom-nav {
+      background: #161B22;
+      border-top: 1px solid #30363D;
+      padding: 8px 0;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+      display: flex;
+      justify-content: space-around;
+      flex-shrink: 0;
+      z-index: 50;
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px;
+      background: transparent;
+      border: none;
+      color: #8B949E;
+      cursor: pointer;
+      transition: color 0.2s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .nav-item:hover { color: #C9D1D9; }
+    .nav-item.active { color: #58A6FF; }
+    .nav-icon { font-size: 20px; }
+    .nav-label { font-size: 11px; font-weight: 500; }
+
+    /* ── Loading ── */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #8B949E;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 2px solid #30363D;
+      border-top-color: #58A6FF;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="session-info">
+        <div class="status-dot disconnected" id="status-dot"></div>
+        <button class="project-selector" id="session-selector" onclick="toggleSessionDropdown()">
+          <i class="fas fa-terminal project-icon"></i>
+          <span class="project-name" id="session-name">No sessions</span>
+          <i class="fas fa-chevron-down dropdown-icon"></i>
+        </button>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" onclick="refreshAll()" aria-label="Refresh">
+          <i class="fas fa-sync-alt"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Session Dropdown -->
+    <div class="session-dropdown" id="session-dropdown"></div>
+
+    <!-- Content Area -->
+    <div class="content-area">
+      <!-- Terminal View -->
+      <div class="view active" id="terminal-view">
+        <div id="terminal-container"></div>
+      </div>
+
+      <!-- Diffs View -->
+      <div class="view" id="diffs-view">
+        <div class="diffs-view">
+          <div class="diff-header">
+            <div class="diff-stats" id="diff-stats">
+              <div class="stat-item">
+                <i class="fas fa-file-code stat-files"></i>
+                <span class="stat-value" id="stat-files">0 files</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value stat-additions" id="stat-additions">+0</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value stat-deletions" id="stat-deletions">-0</span>
+              </div>
+            </div>
+            <div class="diff-actions">
+              <button class="refresh-btn" onclick="loadDiffs()">
+                <i class="fas fa-sync-alt"></i> Refresh
+              </button>
+            </div>
+          </div>
+          <div class="diff-files-list" id="diff-files-list">
+            <div class="empty-state">
+              <i class="fas fa-code-compare"></i>
+              <p>No changes detected</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Files View -->
+      <div class="view" id="files-view">
+        <div class="files-view">
+          <div class="file-tree-container" id="file-tree-container">
+            <div class="files-header">
+              <div class="breadcrumb" id="breadcrumb"></div>
+            </div>
+            <div class="file-list" id="file-list">
+              <div class="loading"><div class="spinner"></div><p>Loading files...</p></div>
+            </div>
+          </div>
+          <div class="file-viewer" id="file-viewer">
+            <div class="file-viewer-header">
+              <button class="file-viewer-back" onclick="closeFileViewer()">
+                <i class="fas fa-arrow-left"></i>
+              </button>
+              <span class="file-viewer-name" id="file-viewer-name"></span>
+            </div>
+            <pre class="file-viewer-content" id="file-viewer-content"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+      <button class="nav-item active" onclick="switchView('terminal-view', this)">
+        <i class="fas fa-terminal nav-icon"></i>
+        <span class="nav-label">Terminal</span>
+      </button>
+      <button class="nav-item" onclick="switchView('diffs-view', this)">
+        <i class="fas fa-code-compare nav-icon"></i>
+        <span class="nav-label">Diffs</span>
+      </button>
+      <button class="nav-item" onclick="switchView('files-view', this)">
+        <i class="fas fa-folder-tree nav-icon"></i>
+        <span class="nav-label">Files</span>
+      </button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Terminal } from 'https://cdn.jsdelivr.net/npm/@xterm/xterm@5/+esm';
+    import { FitAddon } from 'https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0/+esm';
+
+    // ── State ──
+    let ws = null;
+    let currentSessionId = null;
+    let sessions = [];
+
+    // ── Terminal Setup ──
+    const term = new Terminal({
+      cursorBlink: true,
+      theme: {
+        background: '#0D1117',
+        foreground: '#C9D1D9',
+        cursor: '#58A6FF',
+        selectionBackground: '#264F78',
+      },
+      fontSize: 14,
+      fontFamily: "'JetBrains Mono', monospace",
+    });
+    const fitAddon = new FitAddon();
+    term.loadAddon(fitAddon);
+    term.open(document.getElementById('terminal-container'));
+    fitAddon.fit();
+
+    // ── WebSocket ──
+    function connect() {
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${proto}//${location.host}/ws`);
+
+      ws.onopen = () => {
+        document.getElementById('status-dot').classList.remove('disconnected');
+        loadSessions();
+      };
+
+      ws.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        switch (msg.type) {
+          case 'scrollback':
+            term.reset();
+            term.write(msg.data);
+            break;
+          case 'output':
+            term.write(msg.data);
+            break;
+          case 'session_ended':
+            loadSessions();
+            break;
+        }
+      };
+
+      ws.onclose = () => {
+        document.getElementById('status-dot').classList.add('disconnected');
+        setTimeout(connect, 2000);
+      };
+    }
+
+    // ── Sessions ──
+    async function loadSessions() {
+      const resp = await fetch('/api/sessions');
+      sessions = await resp.json();
+      updateSessionUI();
+
+      if (sessions.length > 0 && !currentSessionId) {
+        subscribe(sessions[0].id);
+      } else if (currentSessionId && !sessions.find(s => s.id === currentSessionId)) {
+        currentSessionId = null;
+        if (sessions.length > 0) subscribe(sessions[0].id);
+      }
+    }
+
+    function updateSessionUI() {
+      const nameEl = document.getElementById('session-name');
+      const dropdown = document.getElementById('session-dropdown');
+
+      if (sessions.length === 0) {
+        nameEl.textContent = 'No sessions';
+        dropdown.innerHTML = '<div class="session-option"><div class="session-option-name">No active sessions</div></div>';
+        return;
+      }
+
+      const current = sessions.find(s => s.id === currentSessionId) || sessions[0];
+      nameEl.textContent = `${current.name} (${current.command.split('/').pop()})`;
+
+      dropdown.innerHTML = sessions.map(s => `
+        <div class="session-option" onclick="window._subscribe('${s.id}')">
+          <div class="session-option-name">${s.name}</div>
+          <div class="session-option-meta">${s.command.split('/').pop()} · ${s.cwd.split('/').pop()}</div>
+        </div>
+      `).join('');
+    }
+
+    function subscribe(sessionId) {
+      currentSessionId = sessionId;
+      term.reset();
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'subscribe', sessionId }));
+      }
+      fitTerminal();
+      updateSessionUI();
+      document.getElementById('session-dropdown').classList.remove('open');
+    }
+
+    window._subscribe = subscribe;
+
+    // ── Terminal Input ──
+    term.onData((data) => {
+      if (ws && ws.readyState === WebSocket.OPEN && currentSessionId) {
+        ws.send(JSON.stringify({ type: 'input', sessionId: currentSessionId, data }));
+      }
+    });
+
+    // Only fit the visual terminal — don't resize the PTY
+    // The CLI session controls the PTY size, web just renders
+    let fitTimer = null;
+    function fitTerminal() {
+      clearTimeout(fitTimer);
+      fitTimer = setTimeout(() => fitAddon.fit(), 150);
+    }
+
+    window.addEventListener('resize', fitTerminal);
+    screen.orientation?.addEventListener('change', fitTerminal);
+
+    // ── Diffs ──
+    async function loadDiffs() {
+      if (!currentSessionId) return;
+      const resp = await fetch(`/api/diff?session=${currentSessionId}`);
+      if (!resp.ok) return;
+      const data = await resp.json();
+
+      document.getElementById('stat-files').textContent = `${data.stats.files} files`;
+      document.getElementById('stat-additions').textContent = `+${data.stats.additions}`;
+      document.getElementById('stat-deletions').textContent = `-${data.stats.deletions}`;
+
+      const container = document.getElementById('diff-files-list');
+
+      if (!data.diff) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>Working tree clean</p></div>';
+        return;
+      }
+
+      // Parse unified diff into file sections
+      const files = parseDiff(data.diff);
+      container.innerHTML = files.map((file, i) => `
+        <div class="diff-file-card" id="diff-card-${i}">
+          <div class="diff-file-header" onclick="document.getElementById('diff-card-${i}').classList.toggle('expanded')">
+            <div class="diff-file-info">
+              <div class="diff-file-name">${file.name}</div>
+            </div>
+            <div class="diff-file-changes">
+              <span class="change-count additions">+${file.additions}</span>
+              <span class="change-count deletions">-${file.deletions}</span>
+            </div>
+          </div>
+          <div class="diff-file-content">${file.lines.map(l => {
+            let cls = 'diff-line-context';
+            if (l.startsWith('+')) cls = 'diff-line-add';
+            else if (l.startsWith('-')) cls = 'diff-line-del';
+            else if (l.startsWith('@@')) cls = 'diff-line-hunk';
+            return `<div class="diff-line ${cls}">${escapeHtml(l)}</div>`;
+          }).join('')}</div>
+        </div>
+      `).join('');
+    }
+
+    function parseDiff(raw) {
+      const files = [];
+      let current = null;
+
+      for (const line of raw.split('\n')) {
+        if (line.startsWith('diff --git')) {
+          if (current) files.push(current);
+          const match = line.match(/b\/(.+)$/);
+          current = { name: match?.[1] || 'unknown', lines: [], additions: 0, deletions: 0 };
+        } else if (current) {
+          if (line.startsWith('+++') || line.startsWith('---') || line.startsWith('index ')) continue;
+          current.lines.push(line);
+          if (line.startsWith('+') && !line.startsWith('+++')) current.additions++;
+          if (line.startsWith('-') && !line.startsWith('---')) current.deletions++;
+        }
+      }
+      if (current) files.push(current);
+      return files;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    window.loadDiffs = loadDiffs;
+
+    // ── Files ──
+    async function loadFiles() {
+      if (!currentSessionId) return;
+      const resp = await fetch(`/api/files?session=${currentSessionId}`);
+      if (!resp.ok) return;
+      const data = await resp.json();
+
+      const session = sessions.find(s => s.id === currentSessionId);
+      const cwd = session?.cwd || '';
+      document.getElementById('breadcrumb').innerHTML =
+        cwd.split('/').filter(Boolean).slice(-3).map(p =>
+          `<span class="breadcrumb-item">${p}</span><span class="breadcrumb-separator">/</span>`
+        ).join('');
+
+      document.getElementById('file-list').innerHTML = renderFileTree(data.tree);
+    }
+
+    function renderFileTree(entries) {
+      if (!entries || entries.length === 0) return '';
+      return entries.map(entry => {
+        if (entry.type === 'directory') {
+          const id = 'dir-' + entry.path.replace(/[^a-z0-9]/gi, '-');
+          return `
+            <div class="file-item" onclick="toggleFolder('${id}', this); event.stopPropagation();">
+              <div class="file-item-icon folder-icon"><i class="fas fa-folder"></i></div>
+              <div class="file-item-details">
+                <div class="file-item-name">${entry.name}</div>
+                <div class="file-item-meta">${entry.children?.length || 0} items</div>
+              </div>
+              <i class="fas fa-chevron-right file-item-chevron"></i>
+            </div>
+            <div class="nested-files" id="${id}">
+              ${renderFileTree(entry.children)}
+            </div>
+          `;
+        } else {
+          const iconClass = getFileIconClass(entry.name);
+          const icon = getFileIcon(entry.name);
+          const size = formatSize(entry.size || 0);
+          return `
+            <div class="file-item" onclick="viewFile('${entry.path}', '${entry.name}')">
+              <div class="file-item-icon ${iconClass}"><i class="${icon}"></i></div>
+              <div class="file-item-details">
+                <div class="file-item-name">${entry.name}</div>
+                <div class="file-item-meta">${size}</div>
+              </div>
+            </div>
+          `;
+        }
+      }).join('');
+    }
+
+    function getFileIconClass(name) {
+      const ext = name.split('.').pop()?.toLowerCase();
+      const map = { ts: 'ts-icon', tsx: 'ts-icon', js: 'js-icon', jsx: 'js-icon', json: 'json-icon', md: 'md-icon', css: 'css-icon', html: 'html-icon' };
+      return map[ext] || 'file-icon';
+    }
+
+    function getFileIcon(name) {
+      const ext = name.split('.').pop()?.toLowerCase();
+      const map = { ts: 'fab fa-js', tsx: 'fab fa-react', js: 'fab fa-js', jsx: 'fab fa-react', json: 'fas fa-braces', md: 'fab fa-markdown', css: 'fab fa-css3', html: 'fab fa-html5' };
+      return map[ext] || 'fas fa-file';
+    }
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    async function viewFile(filePath, fileName) {
+      if (!currentSessionId) return;
+      const resp = await fetch(`/api/file?session=${currentSessionId}&path=${encodeURIComponent(filePath)}`);
+      if (!resp.ok) return;
+      const data = await resp.json();
+
+      document.getElementById('file-viewer-name').textContent = fileName;
+      document.getElementById('file-viewer-content').textContent = data.content;
+      document.getElementById('file-tree-container').classList.add('hidden');
+      document.getElementById('file-viewer').classList.add('active');
+    }
+
+    window.viewFile = viewFile;
+
+    window.closeFileViewer = function() {
+      document.getElementById('file-tree-container').classList.remove('hidden');
+      document.getElementById('file-viewer').classList.remove('active');
+    };
+
+    window.toggleFolder = function(id, el) {
+      const nested = document.getElementById(id);
+      nested.classList.toggle('open');
+      el.classList.toggle('expanded');
+    };
+
+    // ── Navigation ──
+    window.switchView = function(viewId, navItem) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      navItem.classList.add('active');
+
+      if (viewId === 'terminal-view') fitTerminal();
+      if (viewId === 'diffs-view') loadDiffs();
+      if (viewId === 'files-view') loadFiles();
+    };
+
+    window.toggleSessionDropdown = function() {
+      document.getElementById('session-dropdown').classList.toggle('open');
+    };
+
+    window.refreshAll = function() {
+      loadSessions();
+      loadDiffs();
+      loadFiles();
+    };
+
+    // Close dropdown on outside click
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.project-selector') && !e.target.closest('.session-dropdown')) {
+        document.getElementById('session-dropdown').classList.remove('open');
+      }
+    });
+
+
+    // ── Init ──
+    connect();
+  </script>
+</body>
+</html>
