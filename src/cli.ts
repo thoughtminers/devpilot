@@ -59,6 +59,8 @@ async function ensureDaemon(port: number): Promise<void> {
   throw new Error(`Daemon failed to start within 6 seconds.\nLog: ${log}`);
 }
 
+const DETACH_COMMAND = '/detach';
+
 async function attachToSession(sessionId: string, port = 3010): Promise<void> {
   const { WebSocket } = await import('ws');
 
@@ -75,15 +77,61 @@ async function attachToSession(sessionId: string, port = 3010): Promise<void> {
       }
       process.stdin.resume();
 
-      // Forward local input to PTY
+      // Buffer for detecting detach command
+      let inputBuffer = '';
+      let buffering = false;
+
+      const sendTopty = (data: string) => {
+        ws.send(JSON.stringify({ type: 'input', sessionId, data }));
+      };
+
+      const flushBuffer = () => {
+        if (inputBuffer) {
+          sendTopty(inputBuffer);
+          inputBuffer = '';
+        }
+        buffering = false;
+      };
+
+      // Forward local input to PTY, intercepting detach command
       process.stdin.on('data', (data: Buffer) => {
-        ws.send(
-          JSON.stringify({
-            type: 'input',
-            sessionId,
-            data: data.toString(),
-          })
-        );
+        const str = data.toString();
+
+        for (const char of str) {
+          if (char === '/' && !buffering) {
+            buffering = true;
+            inputBuffer = '/';
+            continue;
+          }
+
+          if (buffering) {
+            // Enter pressed — check if buffer is the detach command
+            if (char === '\r' || char === '\n') {
+              if (inputBuffer === DETACH_COMMAND) {
+                console.log('\nDetached. Session continues in background.');
+                console.log(`Reattach with: devpilot attach ${sessionId}`);
+                cleanup();
+                resolve();
+                return;
+              }
+              // Not detach — flush buffer + enter to PTY
+              inputBuffer += char;
+              flushBuffer();
+              continue;
+            }
+
+            inputBuffer += char;
+
+            // Check if buffer still matches detach command prefix
+            if (!DETACH_COMMAND.startsWith(inputBuffer)) {
+              flushBuffer();
+            }
+            continue;
+          }
+
+          // Normal mode — send directly
+          sendTopty(char);
+        }
       });
 
       // Send terminal size

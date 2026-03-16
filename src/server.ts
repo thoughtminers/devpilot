@@ -5,6 +5,8 @@ import fastifyStatic from '@fastify/static';
 import fastifyWebsocket from '@fastify/websocket';
 import Fastify from 'fastify';
 
+import { getFileTree, readFileContent } from './core/files.js';
+import { getDiff, getDiffStats, getLog, getStatus, isGitRepo } from './core/git.js';
 import type { SessionManager } from './core/session.js';
 import type { WsClientMessage } from './types.js';
 
@@ -105,7 +107,15 @@ export function createServer(sessionManager: SessionManager) {
     });
   });
 
-  // REST API
+  // Helper to get session cwd
+  function getSessionCwd(sessionId: string | undefined): string | null {
+    if (!sessionId) return null;
+    if (!sessionManager.has(sessionId)) return null;
+    return sessionManager.getInfo(sessionId).cwd;
+  }
+
+  // ── Session API ──
+
   app.get('/api/sessions', async () => {
     return sessionManager.list();
   });
@@ -130,6 +140,63 @@ export function createServer(sessionManager: SessionManager) {
       }
       sessionManager.kill(id);
       return { ok: true };
+    }
+  );
+
+  // ── Git API ──
+
+  app.get<{ Querystring: { session: string } }>(
+    '/api/diff',
+    async (request, reply) => {
+      const cwd = getSessionCwd(request.query.session);
+      if (!cwd) return reply.code(400).send({ error: 'Invalid session' });
+      if (!isGitRepo(cwd)) return reply.code(400).send({ error: 'Not a git repo' });
+      return { diff: getDiff(cwd), stats: getDiffStats(cwd) };
+    }
+  );
+
+  app.get<{ Querystring: { session: string } }>(
+    '/api/status',
+    async (request, reply) => {
+      const cwd = getSessionCwd(request.query.session);
+      if (!cwd) return reply.code(400).send({ error: 'Invalid session' });
+      if (!isGitRepo(cwd)) return reply.code(400).send({ error: 'Not a git repo' });
+      return { files: getStatus(cwd) };
+    }
+  );
+
+  app.get<{ Querystring: { session: string; n?: string } }>(
+    '/api/log',
+    async (request, reply) => {
+      const cwd = getSessionCwd(request.query.session);
+      if (!cwd) return reply.code(400).send({ error: 'Invalid session' });
+      if (!isGitRepo(cwd)) return reply.code(400).send({ error: 'Not a git repo' });
+      const n = parseInt(request.query.n ?? '20', 10);
+      return { commits: getLog(cwd, n) };
+    }
+  );
+
+  // ── Files API ──
+
+  app.get<{ Querystring: { session: string } }>(
+    '/api/files',
+    async (request, reply) => {
+      const cwd = getSessionCwd(request.query.session);
+      if (!cwd) return reply.code(400).send({ error: 'Invalid session' });
+      return { tree: getFileTree(cwd) };
+    }
+  );
+
+  app.get<{ Querystring: { session: string; path: string } }>(
+    '/api/file',
+    async (request, reply) => {
+      const cwd = getSessionCwd(request.query.session);
+      if (!cwd) return reply.code(400).send({ error: 'Invalid session' });
+      const filePath = request.query.path;
+      if (!filePath) return reply.code(400).send({ error: 'Missing path' });
+      const result = readFileContent(cwd, filePath);
+      if (result.error) return reply.code(400).send({ error: result.error });
+      return { content: result.content, path: filePath };
     }
   );
 
