@@ -519,6 +519,56 @@
 
     .stage-checkbox:active { transform: scale(0.9); }
 
+    .commit-section {
+      background: #161B22;
+      border-bottom: 1px solid #30363D;
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.3s ease;
+    }
+
+    .commit-section.open { max-height: 200px; }
+
+    .commit-section-inner {
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .commit-input {
+      background: #0D1117;
+      border: 1px solid #30363D;
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: #C9D1D9;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      width: 100%;
+    }
+
+    .commit-input:focus { border-color: #58A6FF; }
+
+    .commit-btn {
+      background: #238636;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 14px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      align-self: flex-end;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .commit-btn:hover { background: #2ea043; }
+    .commit-btn:disabled { opacity: 0.5; cursor: default; }
+
     .empty-state {
       text-align: center;
       padding: 60px 20px;
@@ -800,8 +850,19 @@
               </div>
             </div>
             <div class="diff-actions">
+              <button class="refresh-btn" onclick="document.getElementById('commit-section').classList.toggle('open')">
+                <i class="fas fa-code-commit"></i> Commit
+              </button>
               <button class="refresh-btn" onclick="loadDiffs()">
                 <i class="fas fa-sync-alt"></i> Refresh
+              </button>
+            </div>
+          </div>
+          <div class="commit-section" id="commit-section">
+            <div class="commit-section-inner">
+              <input class="commit-input" id="commit-message" type="text" placeholder="Commit message..." autocomplete="off">
+              <button class="commit-btn" id="commit-btn" onclick="window.doCommit()">
+                <i class="fas fa-check"></i> Commit staged
               </button>
             </div>
           </div>
@@ -912,7 +973,20 @@
       let fitTimer = null;
       function fitTerminal() {
         clearTimeout(fitTimer);
-        fitTimer = setTimeout(() => fitAddon.fit(), 150);
+        fitTimer = setTimeout(() => {
+          fitAddon.fit();
+          // Send resize to PTY only if web terminal is smaller
+          if (ws && ws.readyState === WebSocket.OPEN && currentSessionId) {
+            const session = sessions.find(s => s.id === currentSessionId);
+            if (session) {
+              const newCols = Math.min(term.cols, session.cols);
+              const newRows = Math.min(term.rows, session.rows);
+              if (newCols < session.cols || newRows < session.rows) {
+                ws.send(JSON.stringify({ type: 'resize', sessionId: currentSessionId, cols: newCols, rows: newRows }));
+              }
+            }
+          }
+        }, 150);
       }
       window.addEventListener('resize', fitTerminal);
       window._fitTerminal = fitTerminal;
@@ -1263,8 +1337,35 @@
       });
       if (resp.ok) {
         el.classList.toggle('checked');
-        // Reload diffs after a short delay to let git settle
         setTimeout(loadDiffs, 300);
+      }
+    };
+
+    window.doCommit = async function() {
+      if (!currentSessionId) return;
+      const input = document.getElementById('commit-message');
+      const message = input.value.trim();
+      if (!message) { input.focus(); return; }
+      const btn = document.getElementById('commit-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Committing...';
+      try {
+        const resp = await fetch('/api/commit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session: currentSessionId, message }),
+        });
+        if (resp.ok) {
+          input.value = '';
+          document.getElementById('commit-section').classList.remove('open');
+          loadDiffs();
+        } else {
+          const err = await resp.json();
+          alert(err.error || 'Commit failed');
+        }
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Commit staged';
       }
     };
 
