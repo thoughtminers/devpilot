@@ -4,6 +4,37 @@ Remote dev session dashboard. Monitor and interact with your terminal sessions f
 
 Start Claude Code (or any terminal command), walk away, and pick it up from your phone — see live terminal output, send input, review diffs, and browse files.
 
+## Install
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/thoughtminers/devpilot/main/scripts/install.sh | sh
+```
+
+Installs to `~/.devpilot` and adds it to your PATH. Supports macOS (Apple Silicon) and Linux (x64).
+
+To change the default port, edit `~/.devpilot/config.json`:
+
+```json
+{
+  "port": 3010
+}
+```
+
+### Update
+
+```sh
+devpilot update
+```
+
+### Uninstall
+
+```sh
+rm -rf ~/.devpilot
+# Remove the PATH line from ~/.zshrc or ~/.bashrc
+```
+
+---
+
 ## Why?
 
 AI coding tools like Claude Code run long sessions. You step away, come back hours later, and have no idea what happened. Or you're on your phone and want to approve an action, check a diff, or just see if it's still running.
@@ -68,12 +99,14 @@ devpilot gives you the one multiplexer feature you actually need — a session t
 ## CLI
 
 ```
-devpilot start [command]       # start a session (default: claude)
-devpilot attach [session]      # reattach to a running session
+devpilot start [command]       # start a session (default: $SHELL)
+devpilot attach <session>      # reattach to a running session
 devpilot list                  # list active sessions
-devpilot stop [session]        # stop a session
-devpilot stop --all            # stop everything
+devpilot stop <session>        # stop a session
+devpilot stop --all            # stop all sessions
 devpilot status                # show dashboard URL and session info
+devpilot shutdown              # stop all sessions and shut down the daemon
+devpilot update                # update to the latest version
 ```
 
 ## License
