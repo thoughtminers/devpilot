@@ -66,7 +66,10 @@ jobs:
           name: linux-x64
           path: dist-release
 
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: dist-release/*
-          generate_release_notes: true
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            dist-release/*.tar.gz* \
+            --generate-notes
