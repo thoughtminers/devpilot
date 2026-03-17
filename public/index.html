@@ -212,6 +212,88 @@
 
     .xterm { height: 100%; }
 
+    /* ── Mobile Terminal ── */
+    #mobile-terminal-wrapper {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      background: #0D1117;
+    }
+
+    #mobile-terminal-output {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #C9D1D9;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .mobile-input-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #161B22;
+      border-top: 1px solid #30363D;
+      flex-shrink: 0;
+    }
+
+    .quick-btn {
+      background: #21262D;
+      border: 1px solid #30363D;
+      border-radius: 16px;
+      padding: 8px 16px;
+      color: #C9D1D9;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .quick-btn:active { background: #30363D; }
+    .quick-btn.yes { color: #238636; border-color: rgba(35, 134, 54, 0.4); }
+    .quick-btn.no { color: #F85149; border-color: rgba(248, 81, 73, 0.4); }
+
+    .mobile-input {
+      flex: 1;
+      background: #0D1117;
+      border: 1px solid #30363D;
+      border-radius: 18px;
+      padding: 8px 14px;
+      color: #C9D1D9;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      min-width: 0;
+    }
+
+    .mobile-input:focus { border-color: #58A6FF; }
+
+    .send-btn {
+      background: #58A6FF;
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0D1117;
+      cursor: pointer;
+      flex-shrink: 0;
+      font-size: 14px;
+      transition: background 0.2s ease;
+    }
+
+    .send-btn:active { background: #4090E0; }
+
     /* ── Diffs View ── */
     .diffs-view {
       overflow-y: auto;
@@ -373,6 +455,45 @@
     }
 
     .diff-line-context { color: #8B949E; }
+
+    .diff-section-header {
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .diff-section-header.staged { color: #238636; }
+    .diff-section-header.unstaged { color: #D29922; }
+    .diff-section-header.untracked { color: #8B949E; }
+
+    .diff-section-header .badge {
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-weight: 500;
+    }
+
+    .diff-section-header.staged .badge { background: rgba(35, 134, 54, 0.2); }
+    .diff-section-header.unstaged .badge { background: rgba(210, 153, 34, 0.2); }
+    .diff-section-header.untracked .badge { background: rgba(139, 148, 158, 0.2); }
+
+    .untracked-file {
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: #8B949E;
+      border-bottom: 1px solid #21262D;
+    }
+
+    .untracked-file i { color: #8B949E; font-size: 12px; }
 
     .empty-state {
       text-align: center;
@@ -627,6 +748,15 @@
       <!-- Terminal View -->
       <div class="view active" id="terminal-view">
         <div id="terminal-container"></div>
+        <div id="mobile-terminal-wrapper">
+          <div id="mobile-terminal-output"></div>
+          <div class="mobile-input-bar">
+            <button class="quick-btn yes" onclick="sendQuick('y')">y</button>
+            <button class="quick-btn no" onclick="sendQuick('n')">n</button>
+            <input class="mobile-input" id="mobile-input" type="text" placeholder="Type a message..." autocomplete="off" autocorrect="off" autocapitalize="off">
+            <button class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
+          </div>
+        </div>
       </div>
 
       <!-- Diffs View -->
@@ -702,30 +832,141 @@
   </div>
 
   <script type="module">
-    import { Terminal } from 'https://cdn.jsdelivr.net/npm/@xterm/xterm@5/+esm';
-    import { FitAddon } from 'https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0/+esm';
-
     // ── State ──
     let ws = null;
     let currentSessionId = null;
     let sessions = [];
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     // ── Terminal Setup ──
-    const term = new Terminal({
-      cursorBlink: true,
-      theme: {
-        background: '#0D1117',
-        foreground: '#C9D1D9',
-        cursor: '#58A6FF',
-        selectionBackground: '#264F78',
-      },
-      fontSize: 14,
-      fontFamily: "'JetBrains Mono', monospace",
+    // Mobile: hidden xterm.js processes ANSI/cursor correctly, we render buffer as plain text
+    // Desktop: visible xterm.js as before
+    let term = null;
+    let fitAddon = null;
+    let hiddenTerm = null;
+    let mobileRenderTimer = null;
+    const mobileOutput = document.getElementById('mobile-terminal-output');
+
+    const { Terminal } = await import('https://cdn.jsdelivr.net/npm/@xterm/xterm@5/+esm');
+
+    if (isMobile) {
+      document.getElementById('terminal-container').style.display = 'none';
+      document.getElementById('mobile-terminal-wrapper').style.display = 'flex';
+
+      // Hidden xterm.js handles all ANSI sequences, cursor movement, spinners etc.
+      // Use 80 cols to match PTY output; CSS pre-wrap handles visual wrapping
+      hiddenTerm = new Terminal({ cols: 80, rows: 24, scrollback: 5000 });
+      const hiddenDiv = document.createElement('div');
+      hiddenDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:0;height:0;overflow:hidden';
+      document.body.appendChild(hiddenDiv);
+      hiddenTerm.open(hiddenDiv);
+    } else {
+      const { FitAddon } = await import('https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0/+esm');
+      term = new Terminal({
+        cursorBlink: true,
+        theme: {
+          background: '#0D1117',
+          foreground: '#C9D1D9',
+          cursor: '#58A6FF',
+          selectionBackground: '#264F78',
+        },
+        fontSize: 14,
+        fontFamily: "'JetBrains Mono', monospace",
+        scrollback: 5000,
+      });
+      fitAddon = new FitAddon();
+      term.loadAddon(fitAddon);
+      term.open(document.getElementById('terminal-container'));
+      fitAddon.fit();
+
+      term.onData((data) => {
+        if (ws && ws.readyState === WebSocket.OPEN && currentSessionId) {
+          ws.send(JSON.stringify({ type: 'input', sessionId: currentSessionId, data }));
+        }
+      });
+
+      let fitTimer = null;
+      function fitTerminal() {
+        clearTimeout(fitTimer);
+        fitTimer = setTimeout(() => fitAddon.fit(), 150);
+      }
+      window.addEventListener('resize', fitTerminal);
+      window._fitTerminal = fitTerminal;
+    }
+
+    // ── Render hidden xterm buffer as plain text (mobile) ──
+    const boxDrawingRe = /^[\s─│┌┐└┘├┤┬┴┼╭╮╯╰━║╔╗╚╝╠╣╦╩╬▀▄█▌▐░▒▓╱╲╳⎺⎻⎼⎽◆●►◄▲▼]*$/;
+
+    function renderMobileBuffer() {
+      const buf = hiddenTerm.buffer.active;
+      const lines = [];
+      for (let i = 0; i < buf.length; i++) {
+        const line = buf.getLine(i);
+        if (line) {
+          const text = line.translateToString(true);
+          // Skip lines that are purely box-drawing / TUI chrome
+          if (text && !boxDrawingRe.test(text)) lines.push(text);
+        }
+      }
+      while (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
+      mobileOutput.textContent = lines.join('\n');
+      mobileOutput.scrollTop = mobileOutput.scrollHeight;
+    }
+
+    // ── Write output to terminal (branched) ──
+    function writeOutput(data) {
+      if (isMobile) {
+        hiddenTerm.write(data);
+        if (mobileRenderTimer) clearTimeout(mobileRenderTimer);
+        mobileRenderTimer = setTimeout(renderMobileBuffer, 80);
+      } else {
+        term.write(data);
+      }
+    }
+
+    function clearOutput() {
+      if (isMobile) {
+        hiddenTerm.reset();
+        mobileOutput.textContent = '';
+      } else {
+        term.reset();
+      }
+    }
+
+    // ── Mobile input ──
+    function sendInput(data) {
+      if (ws && ws.readyState === WebSocket.OPEN && currentSessionId) {
+        ws.send(JSON.stringify({ type: 'input', sessionId: currentSessionId, data }));
+      }
+    }
+
+    window.sendMessage = function() {
+      const input = document.getElementById('mobile-input');
+      const text = input.value;
+      if (!text) return;
+      input.value = '';
+      // Send each character with small delays, then \r
+      let i = 0;
+      function sendNext() {
+        if (i < text.length) {
+          sendInput(text[i++]);
+          setTimeout(sendNext, 5);
+        } else {
+          setTimeout(() => sendInput('\r'), 50);
+        }
+      }
+      sendNext();
+    };
+
+    window.sendQuick = function(char) {
+      sendInput(char);
+      setTimeout(() => sendInput('\r'), 50);
+    };
+
+    // Enter key sends message on mobile
+    document.getElementById('mobile-input')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); window.sendMessage(); }
     });
-    const fitAddon = new FitAddon();
-    term.loadAddon(fitAddon);
-    term.open(document.getElementById('terminal-container'));
-    fitAddon.fit();
 
     // ── WebSocket ──
     function connect() {
@@ -741,11 +982,11 @@
         const msg = JSON.parse(e.data);
         switch (msg.type) {
           case 'scrollback':
-            term.reset();
-            term.write(msg.data);
+            clearOutput();
+            writeOutput(msg.data);
             break;
           case 'output':
-            term.write(msg.data);
+            writeOutput(msg.data);
             break;
           case 'session_ended':
             loadSessions();
@@ -796,60 +1037,37 @@
 
     function subscribe(sessionId) {
       currentSessionId = sessionId;
-      term.reset();
+      clearOutput();
+
+      // Resize hidden terminal to match actual PTY dimensions
+      if (isMobile && hiddenTerm) {
+        const session = sessions.find(s => s.id === sessionId);
+        if (session && session.cols && session.rows) {
+          hiddenTerm.resize(session.cols, session.rows);
+        }
+      }
+
       if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: 'subscribe', sessionId }));
       }
-      fitTerminal();
+      if (!isMobile && window._fitTerminal) window._fitTerminal();
       updateSessionUI();
       document.getElementById('session-dropdown').classList.remove('open');
     }
 
     window._subscribe = subscribe;
 
-    // ── Terminal Input ──
-    term.onData((data) => {
-      if (ws && ws.readyState === WebSocket.OPEN && currentSessionId) {
-        ws.send(JSON.stringify({ type: 'input', sessionId: currentSessionId, data }));
-      }
-    });
-
-    // Only fit the visual terminal — don't resize the PTY
-    // The CLI session controls the PTY size, web just renders
-    let fitTimer = null;
-    function fitTerminal() {
-      clearTimeout(fitTimer);
-      fitTimer = setTimeout(() => fitAddon.fit(), 150);
-    }
-
-    window.addEventListener('resize', fitTerminal);
-    screen.orientation?.addEventListener('change', fitTerminal);
-
     // ── Diffs ──
-    async function loadDiffs() {
-      if (!currentSessionId) return;
-      const resp = await fetch(`/api/diff?session=${currentSessionId}`);
-      if (!resp.ok) return;
-      const data = await resp.json();
+    let diffCardIdx = 0;
 
-      document.getElementById('stat-files').textContent = `${data.stats.files} files`;
-      document.getElementById('stat-additions').textContent = `+${data.stats.additions}`;
-      document.getElementById('stat-deletions').textContent = `-${data.stats.deletions}`;
-
-      const container = document.getElementById('diff-files-list');
-
-      if (!data.diff) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>Working tree clean</p></div>';
-        return;
-      }
-
-      // Parse unified diff into file sections
-      const files = parseDiff(data.diff);
-      container.innerHTML = files.map((file, i) => `
-        <div class="diff-file-card" id="diff-card-${i}">
-          <div class="diff-file-header" onclick="document.getElementById('diff-card-${i}').classList.toggle('expanded')">
+    function renderDiffCards(files) {
+      return files.map(file => {
+        const id = diffCardIdx++;
+        return `
+        <div class="diff-file-card" id="diff-card-${id}">
+          <div class="diff-file-header" onclick="document.getElementById('diff-card-${id}').classList.toggle('expanded')">
             <div class="diff-file-info">
-              <div class="diff-file-name">${file.name}</div>
+              <div class="diff-file-name">${escapeHtml(file.name)}</div>
             </div>
             <div class="diff-file-changes">
               <span class="change-count additions">+${file.additions}</span>
@@ -863,8 +1081,49 @@
             else if (l.startsWith('@@')) cls = 'diff-line-hunk';
             return `<div class="diff-line ${cls}">${escapeHtml(l)}</div>`;
           }).join('')}</div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
+    }
+
+    async function loadDiffs() {
+      if (!currentSessionId) return;
+      const resp = await fetch(`/api/diff?session=${currentSessionId}`);
+      if (!resp.ok) return;
+      const data = await resp.json();
+
+      document.getElementById('stat-files').textContent = `${data.stats.files} files`;
+      document.getElementById('stat-additions').textContent = `+${data.stats.additions}`;
+      document.getElementById('stat-deletions').textContent = `-${data.stats.deletions}`;
+
+      const container = document.getElementById('diff-files-list');
+      const stagedFiles = parseDiff(data.staged || '');
+      const unstagedFiles = parseDiff(data.unstaged || '');
+      const untrackedFiles = data.untracked || [];
+
+      if (!stagedFiles.length && !unstagedFiles.length && !untrackedFiles.length) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>Working tree clean</p></div>';
+        return;
+      }
+
+      diffCardIdx = 0;
+      let html = '';
+
+      if (stagedFiles.length) {
+        html += `<div class="diff-section-header staged"><i class="fas fa-check-circle"></i> Staged <span class="badge">${stagedFiles.length}</span></div>`;
+        html += renderDiffCards(stagedFiles);
+      }
+
+      if (unstagedFiles.length) {
+        html += `<div class="diff-section-header unstaged"><i class="fas fa-pen"></i> Modified <span class="badge">${unstagedFiles.length}</span></div>`;
+        html += renderDiffCards(unstagedFiles);
+      }
+
+      if (untrackedFiles.length) {
+        html += `<div class="diff-section-header untracked"><i class="fas fa-file-circle-plus"></i> Untracked <span class="badge">${untrackedFiles.length}</span></div>`;
+        html += untrackedFiles.map(f => `<div class="untracked-file"><i class="fas fa-plus"></i> ${escapeHtml(f)}</div>`).join('');
+      }
+
+      container.innerHTML = html;
     }
 
     function parseDiff(raw) {
@@ -995,7 +1254,7 @@
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       navItem.classList.add('active');
 
-      if (viewId === 'terminal-view') fitTerminal();
+      if (viewId === 'terminal-view' && !isMobile && window._fitTerminal) window._fitTerminal();
       if (viewId === 'diffs-view') loadDiffs();
       if (viewId === 'files-view') loadFiles();
     };

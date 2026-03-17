@@ -6,7 +6,7 @@ import fastifyWebsocket from '@fastify/websocket';
 import Fastify from 'fastify';
 
 import { getFileTree, readFileContent } from './core/files.js';
-import { getDiff, getDiffStats, getLog, getStatus, isGitRepo } from './core/git.js';
+import { getDiff, getDiffStats, getLog, getStagedDiff, getStatus, getUnstagedDiff, getUntrackedFiles, isGitRepo } from './core/git.js';
 import type { SessionManager } from './core/session.js';
 import type { WsClientMessage } from './types.js';
 
@@ -151,7 +151,13 @@ export function createServer(sessionManager: SessionManager) {
       const cwd = getSessionCwd(request.query.session);
       if (!cwd) return reply.code(400).send({ error: 'Invalid session' });
       if (!isGitRepo(cwd)) return reply.code(400).send({ error: 'Not a git repo' });
-      return { diff: getDiff(cwd), stats: getDiffStats(cwd) };
+      return {
+        diff: getDiff(cwd),
+        staged: getStagedDiff(cwd),
+        unstaged: getUnstagedDiff(cwd),
+        untracked: getUntrackedFiles(cwd),
+        stats: getDiffStats(cwd),
+      };
     }
   );
 

@@ -18,6 +18,20 @@ export function getDiff(cwd: string): string {
   return [staged, unstaged].filter(Boolean).join('\n');
 }
 
+export function getStagedDiff(cwd: string): string {
+  return run('git diff --cached', cwd);
+}
+
+export function getUnstagedDiff(cwd: string): string {
+  return run('git diff', cwd);
+}
+
+export function getUntrackedFiles(cwd: string): string[] {
+  const raw = run('git ls-files --others --exclude-standard', cwd);
+  if (!raw) return [];
+  return raw.split('\n').filter(Boolean);
+}
+
 export function getStatus(
   cwd: string
 ): { file: string; status: string }[] {
