@@ -10,10 +10,16 @@ import type { DaemonMessage, SessionInfo } from './types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Injected by esbuild at release build time; falls back to dev sentinel
+// Injected by esbuild at release build time; falls back to package.json
 declare const DEVPILOT_VERSION: string;
 const VERSION =
-  typeof DEVPILOT_VERSION !== 'undefined' ? DEVPILOT_VERSION : '0.1.0-dev';
+  typeof DEVPILOT_VERSION !== 'undefined'
+    ? DEVPILOT_VERSION
+    : (
+        JSON.parse(
+          fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8')
+        ) as { version: string }
+      ).version;
 
 function readConfig(): { port?: number } {
   const configDir =
