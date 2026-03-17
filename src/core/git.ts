@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
 
 function run(cmd: string, cwd: string): string {
   try {
@@ -56,6 +56,14 @@ export function getLog(
     const [hash, message, date, author] = line.split('||');
     return { hash, message, date, author };
   });
+}
+
+export function stageFile(cwd: string, file: string): void {
+  execFileSync('git', ['add', '--', file], { cwd, timeout: 10000 });
+}
+
+export function unstageFile(cwd: string, file: string): void {
+  execFileSync('git', ['restore', '--staged', '--', file], { cwd, timeout: 10000 });
 }
 
 export function getDiffStats(

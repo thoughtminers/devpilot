@@ -6,7 +6,7 @@ import fastifyWebsocket from '@fastify/websocket';
 import Fastify from 'fastify';
 
 import { getFileTree, readFileContent } from './core/files.js';
-import { getDiff, getDiffStats, getLog, getStagedDiff, getStatus, getUnstagedDiff, getUntrackedFiles, isGitRepo } from './core/git.js';
+import { getDiff, getDiffStats, getLog, getStagedDiff, getStatus, getUnstagedDiff, getUntrackedFiles, isGitRepo, stageFile, unstageFile } from './core/git.js';
 import type { SessionManager } from './core/session.js';
 import type { WsClientMessage } from './types.js';
 
@@ -179,6 +179,36 @@ export function createServer(sessionManager: SessionManager) {
       if (!isGitRepo(cwd)) return reply.code(400).send({ error: 'Not a git repo' });
       const n = parseInt(request.query.n ?? '20', 10);
       return { commits: getLog(cwd, n) };
+    }
+  );
+
+  app.post<{ Body: { session: string; file: string } }>(
+    '/api/stage',
+    async (request, reply) => {
+      const cwd = getSessionCwd(request.body.session);
+      if (!cwd) return reply.code(400).send({ error: 'Invalid session' });
+      if (!isGitRepo(cwd)) return reply.code(400).send({ error: 'Not a git repo' });
+      try {
+        stageFile(cwd, request.body.file);
+        return { ok: true };
+      } catch (e) {
+        return reply.code(500).send({ error: String(e) });
+      }
+    }
+  );
+
+  app.post<{ Body: { session: string; file: string } }>(
+    '/api/unstage',
+    async (request, reply) => {
+      const cwd = getSessionCwd(request.body.session);
+      if (!cwd) return reply.code(400).send({ error: 'Invalid session' });
+      if (!isGitRepo(cwd)) return reply.code(400).send({ error: 'Not a git repo' });
+      try {
+        unstageFile(cwd, request.body.file);
+        return { ok: true };
+      } catch (e) {
+        return reply.code(500).send({ error: String(e) });
+      }
     }
   );
 
