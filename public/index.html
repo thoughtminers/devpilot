@@ -1,16 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>devpilot</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5/css/xterm.min.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
     html {
       height: 100%;
@@ -79,8 +86,15 @@
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
     }
 
     .project-selector {
@@ -113,8 +127,17 @@
       text-overflow: ellipsis;
     }
 
-    .project-icon { color: #58A6FF; flex-shrink: 0; }
-    .dropdown-icon { color: #8B949E; font-size: 12px; margin-left: auto; flex-shrink: 0; }
+    .project-icon {
+      color: #58A6FF;
+      flex-shrink: 0;
+    }
+
+    .dropdown-icon {
+      color: #8B949E;
+      font-size: 12px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
 
     .top-actions {
       display: flex;
@@ -134,7 +157,9 @@
       transition: color 0.2s ease;
     }
 
-    .icon-btn:hover { color: #58A6FF; }
+    .icon-btn:hover {
+      color: #58A6FF;
+    }
 
     /* Session dropdown */
     .session-dropdown {
@@ -152,7 +177,9 @@
       overflow-y: auto;
     }
 
-    .session-dropdown.open { display: block; }
+    .session-dropdown.open {
+      display: block;
+    }
 
     .session-option {
       padding: 12px 16px;
@@ -161,8 +188,13 @@
       transition: background 0.2s ease;
     }
 
-    .session-option:hover { background: #21262D; }
-    .session-option:last-child { border-bottom: none; }
+    .session-option:hover {
+      background: #21262D;
+    }
+
+    .session-option:last-child {
+      border-bottom: none;
+    }
 
     .session-option-name {
       font-family: 'JetBrains Mono', monospace;
@@ -210,7 +242,9 @@
       position: relative;
     }
 
-    .xterm { height: 100%; }
+    .xterm {
+      height: 100%;
+    }
 
     /* ── Mobile Terminal ── */
     #mobile-terminal-wrapper {
@@ -257,9 +291,61 @@
       transition: all 0.2s ease;
     }
 
-    .quick-btn:active { background: #30363D; }
-    .quick-btn.yes { color: #238636; border-color: rgba(35, 134, 54, 0.4); }
-    .quick-btn.no { color: #F85149; border-color: rgba(248, 81, 73, 0.4); }
+    .quick-btn:active {
+      background: #30363D;
+    }
+
+    .quick-btn.icon {
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #8B949E;
+    }
+
+    .quick-btn.toggle-btn {
+      color: #58A6FF;
+      border-color: rgba(88, 166, 255, 0.3);
+    }
+
+    .quick-btn.toggle-btn.active {
+      background: #58A6FF;
+      color: #0D1117;
+    }
+
+    .quick-btn.yes {
+      color: #238636;
+      border-color: rgba(35, 134, 54, 0.4);
+    }
+
+    .quick-btn.no {
+      color: #F85149;
+      border-color: rgba(248, 81, 73, 0.4);
+    }
+
+    .input-mode {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .controls-mode {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      white-space: nowrap;
+    }
+
+    .controls-mode.active {
+      display: flex;
+    }
+
+    .input-mode.hidden {
+      display: none;
+    }
 
     .mobile-input {
       flex: 1;
@@ -272,27 +358,15 @@
       font-family: 'Inter', sans-serif;
       outline: none;
       min-width: 0;
+      resize: none;
+      max-height: 100px;
+      line-height: 1.4;
+      overflow-y: auto;
     }
 
-    .mobile-input:focus { border-color: #58A6FF; }
-
-    .send-btn {
-      background: #58A6FF;
-      border: none;
-      border-radius: 50%;
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #0D1117;
-      cursor: pointer;
-      flex-shrink: 0;
-      font-size: 14px;
-      transition: background 0.2s ease;
+    .mobile-input:focus {
+      border-color: #58A6FF;
     }
-
-    .send-btn:active { background: #4090E0; }
 
     /* ── Diffs View ── */
     .diffs-view {
@@ -330,9 +404,17 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
-    .stat-additions { color: #238636; }
-    .stat-deletions { color: #F85149; }
-    .stat-files { color: #58A6FF; }
+    .stat-additions {
+      color: #238636;
+    }
+
+    .stat-deletions {
+      color: #F85149;
+    }
+
+    .stat-files {
+      color: #58A6FF;
+    }
 
     .diff-actions {
       display: flex;
@@ -372,8 +454,13 @@
       transition: border-color 0.2s ease;
     }
 
-    .diff-file-card:hover { border-color: #484F58; }
-    .diff-file-card.expanded { border-color: #58A6FF; }
+    .diff-file-card:hover {
+      border-color: #484F58;
+    }
+
+    .diff-file-card.expanded {
+      border-color: #58A6FF;
+    }
 
     .diff-file-header {
       padding: 12px 16px;
@@ -418,8 +505,13 @@
       font-weight: 500;
     }
 
-    .additions { color: #238636; }
-    .deletions { color: #F85149; }
+    .additions {
+      color: #238636;
+    }
+
+    .deletions {
+      color: #F85149;
+    }
 
     .diff-file-content {
       display: none;
@@ -432,7 +524,9 @@
       overflow-x: auto;
     }
 
-    .diff-file-card.expanded .diff-file-content { display: block; }
+    .diff-file-card.expanded .diff-file-content {
+      display: block;
+    }
 
     .diff-line {
       padding: 2px 12px;
@@ -454,7 +548,9 @@
       color: #58A6FF;
     }
 
-    .diff-line-context { color: #8B949E; }
+    .diff-line-context {
+      color: #8B949E;
+    }
 
     .diff-section-header {
       padding: 10px 16px;
@@ -467,9 +563,17 @@
       gap: 8px;
     }
 
-    .diff-section-header.staged { color: #238636; }
-    .diff-section-header.unstaged { color: #D29922; }
-    .diff-section-header.untracked { color: #8B949E; }
+    .diff-section-header.staged {
+      color: #238636;
+    }
+
+    .diff-section-header.unstaged {
+      color: #D29922;
+    }
+
+    .diff-section-header.untracked {
+      color: #8B949E;
+    }
 
     .diff-section-header .badge {
       font-size: 11px;
@@ -478,9 +582,17 @@
       font-weight: 500;
     }
 
-    .diff-section-header.staged .badge { background: rgba(35, 134, 54, 0.2); }
-    .diff-section-header.unstaged .badge { background: rgba(210, 153, 34, 0.2); }
-    .diff-section-header.untracked .badge { background: rgba(139, 148, 158, 0.2); }
+    .diff-section-header.staged .badge {
+      background: rgba(35, 134, 54, 0.2);
+    }
+
+    .diff-section-header.unstaged .badge {
+      background: rgba(210, 153, 34, 0.2);
+    }
+
+    .diff-section-header.untracked .badge {
+      background: rgba(139, 148, 158, 0.2);
+    }
 
     .untracked-file {
       padding: 10px 16px;
@@ -493,7 +605,10 @@
       border-bottom: 1px solid #21262D;
     }
 
-    .untracked-file i { color: #8B949E; font-size: 12px; }
+    .untracked-file i {
+      color: #8B949E;
+      font-size: 12px;
+    }
 
     .stage-checkbox {
       width: 20px;
@@ -517,7 +632,9 @@
       color: #fff;
     }
 
-    .stage-checkbox:active { transform: scale(0.9); }
+    .stage-checkbox:active {
+      transform: scale(0.9);
+    }
 
     .commit-section {
       background: #161B22;
@@ -527,7 +644,9 @@
       transition: max-height 0.3s ease;
     }
 
-    .commit-section.open { max-height: 200px; }
+    .commit-section.open {
+      max-height: 200px;
+    }
 
     .commit-section-inner {
       padding: 12px 16px;
@@ -548,7 +667,9 @@
       width: 100%;
     }
 
-    .commit-input:focus { border-color: #58A6FF; }
+    .commit-input:focus {
+      border-color: #58A6FF;
+    }
 
     .commit-btn {
       background: #238636;
@@ -566,8 +687,14 @@
       gap: 6px;
     }
 
-    .commit-btn:hover { background: #2ea043; }
-    .commit-btn:disabled { opacity: 0.5; cursor: default; }
+    .commit-btn:hover {
+      background: #2ea043;
+    }
+
+    .commit-btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
 
     .empty-state {
       text-align: center;
@@ -612,8 +739,13 @@
       white-space: nowrap;
     }
 
-    .breadcrumb-item { color: #58A6FF; }
-    .breadcrumb-separator { color: #484F58; }
+    .breadcrumb-item {
+      color: #58A6FF;
+    }
+
+    .breadcrumb-separator {
+      color: #484F58;
+    }
 
     .file-list {
       flex: 1;
@@ -630,7 +762,9 @@
       border-bottom: 1px solid #21262D;
     }
 
-    .file-item:hover { background: #161B22; }
+    .file-item:hover {
+      background: #161B22;
+    }
 
     .file-item-icon {
       width: 32px;
@@ -645,14 +779,37 @@
       font-size: 14px;
     }
 
-    .file-item-icon.folder-icon { color: #58A6FF; }
-    .file-item-icon.file-icon { color: #8B949E; }
-    .file-item-icon.ts-icon { color: #3178C6; }
-    .file-item-icon.js-icon { color: #F1E05A; }
-    .file-item-icon.json-icon { color: #89E051; }
-    .file-item-icon.md-icon { color: #C9D1D9; }
-    .file-item-icon.css-icon { color: #563D7C; }
-    .file-item-icon.html-icon { color: #E34C26; }
+    .file-item-icon.folder-icon {
+      color: #58A6FF;
+    }
+
+    .file-item-icon.file-icon {
+      color: #8B949E;
+    }
+
+    .file-item-icon.ts-icon {
+      color: #3178C6;
+    }
+
+    .file-item-icon.js-icon {
+      color: #F1E05A;
+    }
+
+    .file-item-icon.json-icon {
+      color: #89E051;
+    }
+
+    .file-item-icon.md-icon {
+      color: #C9D1D9;
+    }
+
+    .file-item-icon.css-icon {
+      color: #563D7C;
+    }
+
+    .file-item-icon.html-icon {
+      color: #E34C26;
+    }
 
     .file-item-details {
       flex: 1;
@@ -682,7 +839,9 @@
       transition: transform 0.2s ease;
     }
 
-    .file-item.expanded .file-item-chevron { transform: rotate(90deg); }
+    .file-item.expanded .file-item-chevron {
+      transform: rotate(90deg);
+    }
 
     .nested-files {
       max-height: 0;
@@ -690,11 +849,21 @@
       transition: max-height 0.3s ease;
     }
 
-    .nested-files.open { max-height: 5000px; }
+    .nested-files.open {
+      max-height: 5000px;
+    }
 
-    .nested-files .file-item { padding-left: 44px; }
-    .nested-files .nested-files .file-item { padding-left: 72px; }
-    .nested-files .nested-files .nested-files .file-item { padding-left: 100px; }
+    .nested-files .file-item {
+      padding-left: 44px;
+    }
+
+    .nested-files .nested-files .file-item {
+      padding-left: 72px;
+    }
+
+    .nested-files .nested-files .nested-files .file-item {
+      padding-left: 100px;
+    }
 
     /* File viewer */
     .file-viewer {
@@ -703,8 +872,13 @@
       height: 100%;
     }
 
-    .file-viewer.active { display: flex; }
-    .file-tree-container.hidden { display: none; }
+    .file-viewer.active {
+      display: flex;
+    }
+
+    .file-tree-container.hidden {
+      display: none;
+    }
 
     .file-viewer-header {
       background: #161B22;
@@ -769,10 +943,22 @@
       font-family: 'Inter', sans-serif;
     }
 
-    .nav-item:hover { color: #C9D1D9; }
-    .nav-item.active { color: #58A6FF; }
-    .nav-icon { font-size: 20px; }
-    .nav-label { font-size: 11px; font-weight: 500; }
+    .nav-item:hover {
+      color: #C9D1D9;
+    }
+
+    .nav-item.active {
+      color: #58A6FF;
+    }
+
+    .nav-icon {
+      font-size: 20px;
+    }
+
+    .nav-label {
+      font-size: 11px;
+      font-weight: 500;
+    }
 
     /* ── Loading ── */
     .loading {
@@ -792,9 +978,14 @@
       margin-bottom: 12px;
     }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
   </style>
 </head>
+
 <body>
   <div class="app-container">
     <!-- Top Bar -->
@@ -808,6 +999,9 @@
         </button>
       </div>
       <div class="top-actions">
+        <button class="icon-btn" id="notif-btn" onclick="window.toggleNotifications()" aria-label="Notifications">
+          <i class="fas fa-bell-slash" id="notif-icon"></i>
+        </button>
         <button class="icon-btn" onclick="refreshAll()" aria-label="Refresh">
           <i class="fas fa-sync-alt"></i>
         </button>
@@ -824,11 +1018,27 @@
         <div id="terminal-container"></div>
         <div id="mobile-terminal-wrapper">
           <div id="mobile-terminal-output"></div>
-          <div class="mobile-input-bar">
-            <button class="quick-btn yes" onclick="sendQuick('y')">y</button>
-            <button class="quick-btn no" onclick="sendQuick('n')">n</button>
-            <input class="mobile-input" id="mobile-input" type="text" placeholder="Type a message..." autocomplete="off" autocorrect="off" autocapitalize="off">
-            <button class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
+          <div class="mobile-input-bar" id="mobile-input-bar">
+            <button class="quick-btn icon toggle-btn" id="controls-toggle" onclick="toggleControls()"><i
+                class="fas fa-keyboard"></i></button>
+            <div class="input-mode" id="input-mode">
+              <button class="quick-btn yes" onclick="sendQuick('y')">y</button>
+              <button class="quick-btn no" onclick="sendQuick('n')">n</button>
+              <textarea class="mobile-input" id="mobile-input" rows="1" placeholder="Type a message..."
+                autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+            </div>
+            <div class="controls-mode" id="controls-mode">
+              <button class="quick-btn icon" onclick="sendRaw('\x1b[A')"><i class="fas fa-arrow-up"></i></button>
+              <button class="quick-btn icon" onclick="sendRaw('\x1b[B')"><i class="fas fa-arrow-down"></i></button>
+              <button class="quick-btn icon" onclick="sendRaw('\r')"><i
+                  class="fas fa-turn-down fa-rotate-90"></i></button>
+              <button class="quick-btn" onclick="sendRaw('\x1b[Z')"
+                style="font-size:11px;padding:8px 10px;">⇧Tab</button>
+              <button class="quick-btn icon" onclick="sendQuick('0')">0</button>
+              <button class="quick-btn icon" onclick="sendQuick('1')">1</button>
+              <button class="quick-btn icon" onclick="sendQuick('2')">2</button>
+              <button class="quick-btn icon" onclick="sendQuick('3')">3</button>
+            </div>
           </div>
         </div>
       </div>
@@ -860,7 +1070,8 @@
           </div>
           <div class="commit-section" id="commit-section">
             <div class="commit-section-inner">
-              <input class="commit-input" id="commit-message" type="text" placeholder="Commit message..." autocomplete="off">
+              <input class="commit-input" id="commit-message" type="text" placeholder="Commit message..."
+                autocomplete="off">
               <button class="commit-btn" id="commit-btn" onclick="window.doCommit()">
                 <i class="fas fa-check"></i> Commit staged
               </button>
@@ -883,7 +1094,10 @@
               <div class="breadcrumb" id="breadcrumb"></div>
             </div>
             <div class="file-list" id="file-list">
-              <div class="loading"><div class="spinner"></div><p>Loading files...</p></div>
+              <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading files...</p>
+              </div>
             </div>
           </div>
           <div class="file-viewer" id="file-viewer">
@@ -996,21 +1210,21 @@
     const boxDrawingRe = /^[\s─│┌┐└┘├┤┬┴┼╭╮╯╰━║╔╗╚╝╠╣╦╩╬▀▄█▌▐░▒▓╱╲╳⎺⎻⎼⎽◆●►◄▲▼]*$/;
 
     const ANSI_16 = [
-      '#484F58','#F85149','#238636','#D29922','#58A6FF','#BC8CFF','#39D353','#8B949E',
-      '#6E7681','#FF7B72','#3FB950','#E3B341','#79C0FF','#D2A8FF','#56D364','#C9D1D9'
+      '#484F58', '#F85149', '#238636', '#D29922', '#58A6FF', '#BC8CFF', '#39D353', '#8B949E',
+      '#6E7681', '#FF7B72', '#3FB950', '#E3B341', '#79C0FF', '#D2A8FF', '#56D364', '#C9D1D9'
     ];
 
     function getCellFg(cell) {
       if (cell.isFgDefault()) return null;
       if (cell.isFgRGB()) {
         const c = cell.getFgColor();
-        return `rgb(${(c>>16)&0xFF},${(c>>8)&0xFF},${c&0xFF})`;
+        return `rgb(${(c >> 16) & 0xFF},${(c >> 8) & 0xFF},${c & 0xFF})`;
       }
       const idx = cell.getFgColor();
       if (idx < 16) return ANSI_16[idx];
       if (idx < 232) {
         const i = idx - 16;
-        return `rgb(${Math.floor(i/36)*51},${Math.floor((i%36)/6)*51},${(i%6)*51})`;
+        return `rgb(${Math.floor(i / 36) * 51},${Math.floor((i % 36) / 6) * 51},${(i % 6) * 51})`;
       }
       const g = (idx - 232) * 10 + 8;
       return `rgb(${g},${g},${g})`;
@@ -1106,11 +1320,13 @@
       }
     }
 
-    window.sendMessage = function() {
+    window.sendMessage = function () {
       const input = document.getElementById('mobile-input');
       const text = input.value;
       if (!text) return;
       input.value = '';
+      input.style.height = 'auto';
+      input.blur();
       // Send each character with small delays, then \r
       let i = 0;
       function sendNext() {
@@ -1124,15 +1340,109 @@
       sendNext();
     };
 
-    window.sendQuick = function(char) {
+    window.sendQuick = function (char) {
       sendInput(char);
       setTimeout(() => sendInput('\r'), 50);
     };
 
+    window.sendRaw = function (data) {
+      sendInput(data);
+    };
+
+    window.toggleControls = function () {
+      const toggle = document.getElementById('controls-toggle');
+      const inputMode = document.getElementById('input-mode');
+      const controlsMode = document.getElementById('controls-mode');
+      const active = controlsMode.classList.toggle('active');
+      inputMode.classList.toggle('hidden', active);
+      toggle.classList.toggle('active', active);
+    };
+
     // Enter key sends message on mobile
-    document.getElementById('mobile-input')?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); window.sendMessage(); }
+    const mobileInput = document.getElementById('mobile-input');
+    mobileInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        window.sendMessage();
+      }
     });
+    // Auto-grow textarea
+    mobileInput?.addEventListener('input', () => {
+      mobileInput.style.height = 'auto';
+      mobileInput.style.height = Math.min(mobileInput.scrollHeight, 100) + 'px';
+    });
+
+    // ── Notifications ──
+    let notificationsEnabled = false;
+    let lastNotifTime = 0;
+    const NOTIF_COOLDOWN = 5000; // don't spam — 5s between notifications
+    const ATTENTION_PATTERNS = [
+      /❯\s*$/,                          // Claude prompt waiting for input
+      /\(y\/n\)/i,                       // yes/no prompt
+      /\(Y\/n\)/,                        // yes/no prompt
+      /accept edits/i,                   // accept edits prompt
+      /shift\+tab to cycle/i,            // permission prompt
+      /Do you want to proceed/i,         // confirmation
+      /Press Enter/i,                    // waiting for enter
+      /\? \(y\)es/i,                     // git-style prompts
+    ];
+
+    // Beep using Web Audio API
+    function playBeep() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 800;
+        gain.gain.value = 0.3;
+        osc.start();
+        osc.stop(ctx.currentTime + 0.15);
+      } catch { }
+    }
+
+    function checkForAttention(data) {
+      if (!notificationsEnabled) return;
+      const now = Date.now();
+      if (now - lastNotifTime < NOTIF_COOLDOWN) return;
+
+      // Strip ANSI for pattern matching
+      const clean = data
+        .replace(/\x1b\[[0-9;?]*[a-zA-Z]/g, '')
+        .replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '')
+        .replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/g, '');
+
+      for (const pattern of ATTENTION_PATTERNS) {
+        if (pattern.test(clean)) {
+          lastNotifTime = now;
+          playBeep();
+          if (document.hidden && Notification.permission === 'granted') {
+            const match = clean.match(pattern)?.[0] || 'Action needed';
+            new Notification('devpilot', { body: match, tag: 'devpilot-attention' });
+          }
+          // Vibrate on mobile
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+          return;
+        }
+      }
+    }
+
+    window.toggleNotifications = async function () {
+      if (!notificationsEnabled) {
+        if (Notification.permission === 'default') {
+          const perm = await Notification.requestPermission();
+          if (perm !== 'granted') return;
+        }
+        notificationsEnabled = true;
+        document.getElementById('notif-icon').className = 'fas fa-bell';
+        document.getElementById('notif-btn').style.color = '#58A6FF';
+      } else {
+        notificationsEnabled = false;
+        document.getElementById('notif-icon').className = 'fas fa-bell-slash';
+        document.getElementById('notif-btn').style.color = '';
+      }
+    };
 
     // ── WebSocket ──
     function connect() {
@@ -1153,6 +1463,7 @@
             break;
           case 'output':
             writeOutput(msg.data);
+            checkForAttention(msg.data);
             break;
           case 'session_ended':
             loadSessions();
@@ -1245,12 +1556,12 @@
             </div>
           </div>
           <div class="diff-file-content">${file.lines.map(l => {
-            let cls = 'diff-line-context';
-            if (l.startsWith('+')) cls = 'diff-line-add';
-            else if (l.startsWith('-')) cls = 'diff-line-del';
-            else if (l.startsWith('@@')) cls = 'diff-line-hunk';
-            return `<div class="diff-line ${cls}">${escapeHtml(l)}</div>`;
-          }).join('')}</div>
+          let cls = 'diff-line-context';
+          if (l.startsWith('+')) cls = 'diff-line-add';
+          else if (l.startsWith('-')) cls = 'diff-line-del';
+          else if (l.startsWith('@@')) cls = 'diff-line-hunk';
+          return `<div class="diff-line ${cls}">${escapeHtml(l)}</div>`;
+        }).join('')}</div>
         </div>`;
       }).join('');
     }
@@ -1328,7 +1639,7 @@
 
     window.loadDiffs = loadDiffs;
 
-    window.toggleStage = async function(file, isStaged, el) {
+    window.toggleStage = async function (file, isStaged, el) {
       if (!currentSessionId) return;
       const endpoint = isStaged ? '/api/unstage' : '/api/stage';
       const resp = await fetch(endpoint, {
@@ -1342,7 +1653,7 @@
       }
     };
 
-    window.doCommit = async function() {
+    window.doCommit = async function () {
       if (!currentSessionId) return;
       const input = document.getElementById('commit-message');
       const message = input.value.trim();
@@ -1454,19 +1765,19 @@
 
     window.viewFile = viewFile;
 
-    window.closeFileViewer = function() {
+    window.closeFileViewer = function () {
       document.getElementById('file-tree-container').classList.remove('hidden');
       document.getElementById('file-viewer').classList.remove('active');
     };
 
-    window.toggleFolder = function(id, el) {
+    window.toggleFolder = function (id, el) {
       const nested = document.getElementById(id);
       nested.classList.toggle('open');
       el.classList.toggle('expanded');
     };
 
     // ── Navigation ──
-    window.switchView = function(viewId, navItem) {
+    window.switchView = function (viewId, navItem) {
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.getElementById(viewId).classList.add('active');
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1477,11 +1788,11 @@
       if (viewId === 'files-view') loadFiles();
     };
 
-    window.toggleSessionDropdown = function() {
+    window.toggleSessionDropdown = function () {
       document.getElementById('session-dropdown').classList.toggle('open');
     };
 
-    window.refreshAll = function() {
+    window.refreshAll = function () {
       loadSessions();
       loadDiffs();
       loadFiles();
@@ -1499,4 +1810,5 @@
     connect();
   </script>
 </body>
+
 </html>
