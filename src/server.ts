@@ -6,7 +6,7 @@ import fastifyWebsocket from '@fastify/websocket';
 import Fastify from 'fastify';
 
 import { getFileTree, readFileContent } from './core/files.js';
-import { getDiff, getDiffStats, getLog, getStagedDiff, getStatus, getUnstagedDiff, getUntrackedFiles, isGitRepo, stageFile, unstageFile } from './core/git.js';
+import { commitStaged, getDiff, getDiffStats, getLog, getStagedDiff, getStatus, getUnstagedDiff, getUntrackedFiles, isGitRepo, stageFile, unstageFile } from './core/git.js';
 import type { SessionManager } from './core/session.js';
 import type { WsClientMessage } from './types.js';
 
@@ -206,6 +206,22 @@ export function createServer(sessionManager: SessionManager) {
       try {
         unstageFile(cwd, request.body.file);
         return { ok: true };
+      } catch (e) {
+        return reply.code(500).send({ error: String(e) });
+      }
+    }
+  );
+
+  app.post<{ Body: { session: string; message: string } }>(
+    '/api/commit',
+    async (request, reply) => {
+      const cwd = getSessionCwd(request.body.session);
+      if (!cwd) return reply.code(400).send({ error: 'Invalid session' });
+      if (!isGitRepo(cwd)) return reply.code(400).send({ error: 'Not a git repo' });
+      if (!request.body.message?.trim()) return reply.code(400).send({ error: 'Message required' });
+      try {
+        const output = commitStaged(cwd, request.body.message);
+        return { ok: true, output };
       } catch (e) {
         return reply.code(500).send({ error: String(e) });
       }

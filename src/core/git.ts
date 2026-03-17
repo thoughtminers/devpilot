@@ -66,6 +66,14 @@ export function unstageFile(cwd: string, file: string): void {
   execFileSync('git', ['restore', '--staged', '--', file], { cwd, timeout: 10000 });
 }
 
+export function commitStaged(cwd: string, message: string): string {
+  return execFileSync('git', ['commit', '-m', message], {
+    cwd,
+    encoding: 'utf-8',
+    timeout: 30000,
+  }).trimEnd();
+}
+
 export function getDiffStats(
   cwd: string
 ): { files: number; additions: number; deletions: number } {
