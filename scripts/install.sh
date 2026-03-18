@@ -39,7 +39,7 @@ echo "The authors are not responsible for any damage or unauthorized access"
 echo "resulting from the use of this tool."
 echo ""
 printf "Do you accept full responsibility and wish to continue? [y/N] "
-read -r ACCEPT
+read -r ACCEPT < /dev/tty
 case "$ACCEPT" in
   y|Y|yes|YES) ;;
   *)
@@ -125,12 +125,20 @@ find "$INSTALL_DIR/lib/node_modules/node-pty" -name "spawn-helper" -exec chmod +
 
 # Restore config.json from backup if it existed, otherwise create default
 CONFIG="$INSTALL_DIR/config.json"
+HAS_PASSWORD=""
 if [ -n "$BACKUP" ] && [ -f "$BACKUP/config.json" ]; then
   cp "$BACKUP/config.json" "$CONFIG"
   rm -rf "$BACKUP"
-elif [ ! -f "$CONFIG" ]; then
+  # Check if existing config already has a password
+  if grep -q '"passwordHash"' "$CONFIG" 2>/dev/null; then
+    HAS_PASSWORD="1"
+  fi
+fi
+
+# Prompt for password if none is set (fresh install or upgrade without password)
+if [ -z "$HAS_PASSWORD" ]; then
   printf "Set a dashboard password (leave empty for no auth): "
-  read -r PASS
+  read -r PASS < /dev/tty
   if [ -n "$PASS" ]; then
     if command -v sha256sum >/dev/null 2>&1; then
       HASH=$(printf '%s' "$PASS" | sha256sum | awk '{print $1}')
@@ -142,12 +150,13 @@ elif [ ! -f "$CONFIG" ]; then
     fi
     if [ -n "$HASH" ]; then
       printf '{\n  "port": 3010,\n  "passwordHash": "%s"\n}\n' "$HASH" > "$CONFIG"
-    else
-      printf '{\n  "port": 3010\n}\n' > "$CONFIG"
     fi
-  else
-    printf '{\n  "port": 3010\n}\n' > "$CONFIG"
   fi
+fi
+
+# Ensure config.json exists (fresh install, no password set)
+if [ ! -f "$CONFIG" ]; then
+  printf '{\n  "port": 3010\n}\n' > "$CONFIG"
 fi
 
 # ── PATH setup ────────────────────────────────────────────────────────────────
