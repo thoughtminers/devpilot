@@ -1,18 +1,17 @@
 import * as fs from 'node:fs';
 import * as net from 'node:net';
 import * as path from 'node:path';
-
 import { SessionManager } from './core/session.js';
 import { createServer } from './server.js';
 import type { DaemonMessage, SessionCreateOptions } from './types.js';
 
-const DEVPILOT_DIR = path.join(process.env.HOME ?? '/tmp', '.devpilot');
-const PID_FILE = path.join(DEVPILOT_DIR, 'daemon.pid');
-const SOCK_FILE = path.join(DEVPILOT_DIR, 'daemon.sock');
+const TPORT_DIR = path.join(process.env.HOME ?? '/tmp', '.tport');
+const PID_FILE = path.join(TPORT_DIR, 'daemon.pid');
+const SOCK_FILE = path.join(TPORT_DIR, 'daemon.sock');
 const DEFAULT_PORT = 3010;
 
 export function getDaemonPaths() {
-  return { dir: DEVPILOT_DIR, pidFile: PID_FILE, sockFile: SOCK_FILE };
+  return { dir: TPORT_DIR, pidFile: PID_FILE, sockFile: SOCK_FILE };
 }
 
 export function isDaemonRunning(): boolean {
@@ -54,7 +53,7 @@ export async function sendToDaemon(
 }
 
 export async function startDaemon(port = DEFAULT_PORT): Promise<void> {
-  fs.mkdirSync(DEVPILOT_DIR, { recursive: true });
+  fs.mkdirSync(TPORT_DIR, { recursive: true });
 
   // Clean up stale socket
   if (fs.existsSync(SOCK_FILE)) {
@@ -66,7 +65,7 @@ export async function startDaemon(port = DEFAULT_PORT): Promise<void> {
 
   // Start the HTTP + WebSocket server
   const address = await app.listen({ port, host: '0.0.0.0' });
-  console.log(`devpilot web dashboard: ${address}`);
+  console.log(`tport web dashboard: ${address}`);
 
   // Start the Unix socket for CLI communication
   const unixServer = net.createServer(socket => {
@@ -103,7 +102,7 @@ export async function startDaemon(port = DEFAULT_PORT): Promise<void> {
   });
 
   unixServer.listen(SOCK_FILE, () => {
-    console.log(`devpilot daemon listening on ${SOCK_FILE}`);
+    console.log(`tport daemon listening on ${SOCK_FILE}`);
   });
 
   // Write PID file
@@ -111,7 +110,7 @@ export async function startDaemon(port = DEFAULT_PORT): Promise<void> {
 
   // Graceful shutdown
   const cleanup = () => {
-    console.log('devpilot daemon shutting down...');
+    console.log('tport daemon shutting down...');
     sessionManager.killAll();
     unixServer.close();
     app.close();
@@ -209,7 +208,7 @@ const isMain =
   process.argv[1]?.endsWith('daemon.ts');
 
 if (isMain) {
-  const port = parseInt(process.env.DEVPILOT_PORT ?? String(DEFAULT_PORT), 10);
+  const port = parseInt(process.env.TPORT_PORT ?? String(DEFAULT_PORT), 10);
   startDaemon(port).catch(err => {
     console.error('Failed to start daemon:', err);
     process.exit(1);

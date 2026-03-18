@@ -1,11 +1,11 @@
 #!/bin/sh
-# devpilot installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/thoughtminers/devpilot/main/scripts/install.sh | sh
+# tport installer
+# Usage: curl -fsSL https://raw.githubusercontent.com/thoughtminers/tport/main/scripts/install.sh | sh
 
 set -e
 
-REPO="thoughtminers/devpilot"
-INSTALL_DIR="${DEVPILOT_INSTALL_DIR:-$HOME/.devpilot}"
+REPO="thoughtminers/tport"
+INSTALL_DIR="${TPORT_INSTALL_DIR:-$HOME/.tport}"
 
 # ── Detect platform ───────────────────────────────────────────────────────────
 
@@ -32,7 +32,7 @@ esac
 
 # ── Fetch latest release ──────────────────────────────────────────────────────
 
-echo "Fetching latest devpilot release..."
+echo "Fetching latest tport release..."
 RELEASE_JSON=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest")
 VERSION=$(echo "$RELEASE_JSON" | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"v\([^"]*\)".*/\1/')
 
@@ -43,7 +43,7 @@ fi
 
 echo "Latest version: v${VERSION}"
 
-TARBALL="devpilot-${VERSION}-${PLATFORM}-${ARCH}.tar.gz"
+TARBALL="tport-${VERSION}-${PLATFORM}-${ARCH}.tar.gz"
 SHA256_FILE="${TARBALL}.sha256"
 
 TAR_URL=$(echo "$RELEASE_JSON" | grep "browser_download_url" | grep "$TARBALL\"" | head -1 | sed 's/.*"browser_download_url": *"\([^"]*\)".*/\1/')
@@ -93,12 +93,12 @@ fi
 
 # Extract
 tar -xzf "$TMP_DIR/$TARBALL" -C "$TMP_DIR"
-EXTRACTED=$(find "$TMP_DIR" -maxdepth 1 -type d -name "devpilot-*" | head -1)
+EXTRACTED=$(find "$TMP_DIR" -maxdepth 1 -type d -name "tport-*" | head -1)
 
 mv "$EXTRACTED" "$INSTALL_DIR"
 
 # Ensure executables are marked
-chmod +x "$INSTALL_DIR/bin/devpilot"
+chmod +x "$INSTALL_DIR/bin/tport"
 chmod +x "$INSTALL_DIR/bin/node"
 
 # chmod spawn-helper on macOS
@@ -121,7 +121,7 @@ PATH_LINE="export PATH=\"\$PATH:$BIN_DIR\""
 add_to_rc() {
   RC="$1"
   if [ -f "$RC" ] && ! grep -q "$BIN_DIR" "$RC" 2>/dev/null; then
-    printf '\n# devpilot\n%s\n' "$PATH_LINE" >> "$RC"
+    printf '\n# tport\n%s\n' "$PATH_LINE" >> "$RC"
     echo "Added to $RC"
   fi
 }
@@ -133,11 +133,11 @@ add_to_rc "$HOME/.bash_profile"
 # ── Done ──────────────────────────────────────────────────────────────────────
 
 echo ""
-echo "devpilot v${VERSION} installed!"
+echo "tport v${VERSION} installed!"
 echo ""
 echo "  Reload your shell or run:"
 echo "    export PATH=\"\$PATH:$BIN_DIR\""
 echo ""
 echo "  Then start a session:"
-echo "    devpilot start"
+echo "    tport start"
 echo ""

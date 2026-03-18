@@ -1,9 +1,11 @@
 {
 	"cSpell.words": [
+		"autoImports",
 		"eslint",
 		"prettier",
-		"typescript",
-		"autoImports",
+		"pycache",
+		"TPORT",
+		"typescript"
 	],
 	"js/ts.preferences.includePackageJsonAutoImports": "on",
 	"js/ts.suggest.autoImports": true,

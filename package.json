@@ -1,11 +1,11 @@
 {
-  "name": "devpilot",
+  "name": "tport",
   "version": "0.2.2",
   "description": "Remote dev session dashboard. Monitor and interact with your terminal sessions from your phone.",
   "type": "module",
   "main": "dist/cli.js",
   "bin": {
-    "devpilot": "bin/devpilot"
+    "tport": "bin/tport"
   },
   "scripts": {
     "build": "tsc",

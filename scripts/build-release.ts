@@ -1,22 +1,22 @@
 #!/usr/bin/env tsx
 /**
- * Build script: bundles devpilot with esbuild and packages a platform tarball.
+ * Build script: bundles tport with esbuild and packages a platform tarball.
  *
  * Usage:
  *   tsx scripts/build-release.ts [--platform darwin|linux] [--arch arm64|x64]
  *
  * Output:
- *   dist-release/devpilot-{version}-{platform}-{arch}.tar.gz
- *   dist-release/devpilot-{version}-{platform}-{arch}.tar.gz.sha256
+ *   dist-release/tport-{version}-{platform}-{arch}.tar.gz
+ *   dist-release/tport-{version}-{platform}-{arch}.tar.gz.sha256
  */
 
 import * as esbuild from 'esbuild';
+import { execSync } from 'node:child_process';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as https from 'node:https';
-import * as path from 'node:path';
 import * as os from 'node:os';
-import { execSync } from 'node:child_process';
+import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -45,7 +45,7 @@ const VERSION = pkg.version;
 // ── Paths ─────────────────────────────────────────────────────────────────────
 
 const DIST = path.join(ROOT, 'dist-release');
-const BUNDLE_NAME = `devpilot-${VERSION}-${targetPlatform}-${targetArch}`;
+const BUNDLE_NAME = `tport-${VERSION}-${targetPlatform}-${targetArch}`;
 const BUNDLE_DIR = path.join(DIST, BUNDLE_NAME);
 
 const NODE_VERSION = '22.15.0';
@@ -92,7 +92,7 @@ function sha256File(filePath: string): string {
 
 // ── Build ─────────────────────────────────────────────────────────────────────
 
-console.log(`\nBuilding devpilot v${VERSION} for ${targetPlatform}-${targetArch}\n`);
+console.log(`\nBuilding tport v${VERSION} for ${targetPlatform}-${targetArch}\n`);
 
 // Clean and create output directory
 fs.rmSync(BUNDLE_DIR, { recursive: true, force: true });
@@ -117,7 +117,7 @@ await esbuild.build({
     js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);",
   },
   define: {
-    DEVPILOT_VERSION: JSON.stringify(VERSION),
+    TPORT_VERSION: JSON.stringify(VERSION),
   },
   minify: false,
 });
@@ -125,7 +125,7 @@ log('  → lib/cli.mjs');
 log('  → lib/daemon.mjs');
 
 // 2. Download Node.js binary
-const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'devpilot-build-'));
+const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tport-build-'));
 const nodeTarPath = path.join(tmpDir, NODE_TARBALL);
 
 log(`Downloading Node.js v${NODE_VERSION} (${NODE_OS}-${NODE_ARCH})...`);
@@ -203,16 +203,16 @@ execSync(
 log('  → lib/public/');
 
 // 6. Write shell wrapper
-log('Writing bin/devpilot wrapper...');
+log('Writing bin/tport wrapper...');
 const wrapper = `#!/bin/sh
 set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-DEVPILOT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-export DEVPILOT_ROOT
-exec "$SCRIPT_DIR/node" "$DEVPILOT_ROOT/lib/cli.mjs" "$@"
+TPORT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+export TPORT_ROOT
+exec "$SCRIPT_DIR/node" "$TPORT_ROOT/lib/cli.mjs" "$@"
 `;
-fs.writeFileSync(path.join(BUNDLE_DIR, 'bin', 'devpilot'), wrapper);
-fs.chmodSync(path.join(BUNDLE_DIR, 'bin', 'devpilot'), 0o755);
+fs.writeFileSync(path.join(BUNDLE_DIR, 'bin', 'tport'), wrapper);
+fs.chmodSync(path.join(BUNDLE_DIR, 'bin', 'tport'), 0o755);
 
 // 7. Write version.json
 fs.writeFileSync(

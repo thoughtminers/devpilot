@@ -1,7 +1,6 @@
 import * as pty from 'node-pty';
 import { execSync } from 'node:child_process';
 import { EventEmitter } from 'node:events';
-
 import type {
   SessionCreateOptions,
   SessionDataHandler,

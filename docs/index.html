@@ -1,24 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>devpilot — Your terminal sessions, anywhere</title>
+  <title>tport — Your terminal sessions, anywhere</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: #ffffff;
       color: #24292f;
       line-height: 1.6;
+      overflow-x: hidden;
     }
 
-    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
 
     /* Header */
     header {
@@ -30,7 +42,11 @@
       z-index: 100;
     }
 
-    .header-content { display: flex; justify-content: space-between; align-items: center; }
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
     .logo {
       display: flex;
@@ -54,7 +70,11 @@
       font-size: 16px;
     }
 
-    nav { display: flex; gap: 24px; align-items: center; }
+    nav {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
 
     nav a {
       color: #24292f;
@@ -64,7 +84,9 @@
       transition: color 0.2s ease;
     }
 
-    nav a:hover { color: #0969da; }
+    nav a:hover {
+      color: #0969da;
+    }
 
     .btn-primary {
       background: #0969da;
@@ -96,7 +118,9 @@
       display: inline-block;
     }
 
-    .btn-secondary:hover { background: #eaeef2; }
+    .btn-secondary:hover {
+      background: #eaeef2;
+    }
 
     /* Hero */
     .hero {
@@ -126,7 +150,11 @@
       line-height: 1.7;
     }
 
-    .hero-cta { display: flex; flex-direction: column; gap: 12px; }
+    .hero-cta {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
     .install-cmd {
       background: #24292f;
@@ -143,9 +171,13 @@
       user-select: all;
     }
 
-    .install-cmd:hover { background: #444c56; }
+    .install-cmd:hover {
+      background: #444c56;
+    }
 
-    .install-cmd .prompt { color: #7ee787; }
+    .install-cmd .prompt {
+      color: #7ee787;
+    }
 
     .install-cmd .copy-hint {
       margin-left: auto;
@@ -183,9 +215,17 @@
       border-radius: 50%;
     }
 
-    .terminal-dot.red { background: #ff5f57; }
-    .terminal-dot.yellow { background: #febc2e; }
-    .terminal-dot.green { background: #28c840; }
+    .terminal-dot.red {
+      background: #ff5f57;
+    }
+
+    .terminal-dot.yellow {
+      background: #febc2e;
+    }
+
+    .terminal-dot.green {
+      background: #28c840;
+    }
 
     .terminal-title {
       margin-left: auto;
@@ -203,17 +243,40 @@
       color: #e6edf3;
     }
 
-    .t-prompt { color: #7ee787; }
-    .t-cmd { color: #e6edf3; }
-    .t-output { color: #8b949e; }
-    .t-url { color: #58a6ff; }
-    .t-success { color: #3fb950; }
-    .t-dim { color: #484f58; }
+    .t-prompt {
+      color: #7ee787;
+    }
+
+    .t-cmd {
+      color: #e6edf3;
+    }
+
+    .t-output {
+      color: #8b949e;
+    }
+
+    .t-url {
+      color: #58a6ff;
+    }
+
+    .t-success {
+      color: #3fb950;
+    }
+
+    .t-dim {
+      color: #484f58;
+    }
 
     /* Features */
-    .features { padding: 56px 0; background: #ffffff; }
+    .features {
+      padding: 56px 0;
+      background: #ffffff;
+    }
 
-    .section-header { text-align: center; margin-bottom: 40px; }
+    .section-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
 
     .section-header h2 {
       font-size: 32px;
@@ -261,11 +324,23 @@
       font-size: 18px;
     }
 
-    .feature-card h3 { font-size: 17px; font-weight: 600; margin-bottom: 10px; }
-    .feature-card p { font-size: 14px; color: #57606a; line-height: 1.6; }
+    .feature-card h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: #57606a;
+      line-height: 1.6;
+    }
 
     /* How it works */
-    .how-it-works { padding: 56px 0; background: #f6f8fa; }
+    .how-it-works {
+      padding: 56px 0;
+      background: #f6f8fa;
+    }
 
     .steps {
       display: grid;
@@ -274,7 +349,9 @@
       margin-top: 40px;
     }
 
-    .step { text-align: center; }
+    .step {
+      text-align: center;
+    }
 
     .step-number {
       width: 52px;
@@ -290,8 +367,16 @@
       margin: 0 auto 20px;
     }
 
-    .step h3 { font-size: 18px; font-weight: 600; margin-bottom: 10px; }
-    .step p { font-size: 14px; color: #57606a; }
+    .step h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .step p {
+      font-size: 14px;
+      color: #57606a;
+    }
 
     .step code {
       background: #24292f;
@@ -310,8 +395,17 @@
       text-align: center;
     }
 
-    .cta-section h2 { font-size: 36px; font-weight: 700; margin-bottom: 16px; }
-    .cta-section p { font-size: 18px; margin-bottom: 32px; color: #8b949e; }
+    .cta-section h2 {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .cta-section p {
+      font-size: 18px;
+      margin-bottom: 32px;
+      color: #8b949e;
+    }
 
     .cta-section .install-cmd {
       max-width: 480px;
@@ -320,10 +414,16 @@
       border: 1px solid #30363d;
     }
 
-    .cta-section .install-cmd:hover { background: #1c2128; }
+    .cta-section .install-cmd:hover {
+      background: #1c2128;
+    }
 
     /* Footer */
-    footer { background: #161b22; color: #ffffff; padding: 40px 0 24px; }
+    footer {
+      background: #161b22;
+      color: #ffffff;
+      padding: 40px 0 24px;
+    }
 
     .footer-content {
       display: flex;
@@ -339,7 +439,10 @@
       max-width: 320px;
     }
 
-    .footer-links { display: flex; gap: 24px; }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
 
     .footer-links a {
       color: #8b949e;
@@ -348,7 +451,9 @@
       transition: color 0.2s ease;
     }
 
-    .footer-links a:hover { color: #ffffff; }
+    .footer-links a:hover {
+      color: #ffffff;
+    }
 
     .footer-bottom {
       border-top: 1px solid #30363d;
@@ -362,15 +467,82 @@
 
     /* Responsive */
     @media (max-width: 768px) {
-      .hero-content { grid-template-columns: 1fr; gap: 40px; }
-      .hero-text h1 { font-size: 36px; }
-      .features-grid { grid-template-columns: 1fr; }
-      .steps { grid-template-columns: 1fr; }
-      .footer-content { flex-direction: column; gap: 24px; }
-      nav .btn-primary { display: none; }
+      .hero {
+        padding: 32px 0 40px;
+      }
+
+      .hero-content {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .hero-text h1 {
+        font-size: 28px;
+      }
+
+      .hero-text p {
+        font-size: 16px;
+        margin-bottom: 20px;
+      }
+
+      .install-cmd {
+        font-size: 11px;
+        word-break: break-all;
+        padding: 12px 14px;
+      }
+
+      .install-cmd .copy-hint {
+        display: none;
+      }
+
+      .terminal-body {
+        font-size: 11px;
+        padding: 14px;
+        line-height: 1.7;
+      }
+
+      .features {
+        padding: 40px 0;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .feature-card {
+        padding: 20px;
+      }
+
+      .how-it-works {
+        padding: 40px 0;
+      }
+
+      .steps {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .section-header {
+        margin-bottom: 28px;
+      }
+
+      .section-header h2 {
+        font-size: 26px;
+      }
+
+      .footer-content {
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      nav .btn-primary {
+        display: none;
+      }
     }
   </style>
 </head>
+
 <body>
 
   <header>
@@ -378,12 +550,12 @@
       <div class="header-content">
         <a href="#" class="logo">
           <div class="logo-icon"><i class="fa-solid fa-terminal"></i></div>
-          devpilot
+          tport
         </a>
         <nav>
           <a href="#features">Features</a>
           <a href="#how-it-works">How It Works</a>
-          <a href="https://github.com/thoughtminers/devpilot" target="_blank" class="btn-primary">
+          <a href="https://github.com/thoughtminers/tport" target="_blank" class="btn-primary">
             <i class="fa-brands fa-github"></i> GitHub
           </a>
         </nav>
@@ -396,14 +568,15 @@
       <div class="hero-content">
         <div class="hero-text">
           <h1>Your terminal sessions, anywhere</h1>
-          <p>Start Claude Code, walk away, and check in from your phone. Live terminal output, git diffs, and file browsing — no tmux required.</p>
+          <p>Start Claude Code, walk away, and check in from your phone. Live terminal output, git diffs, and file
+            browsing — no tmux required.</p>
           <div class="hero-cta">
             <div class="install-cmd" onclick="copyInstall(this)">
               <span class="prompt">$</span>
-              <span>curl -fsSL https://raw.githubusercontent.com/thoughtminers/devpilot/main/scripts/install.sh | sh</span>
+              <span>curl -fsSL https://raw.githubusercontent.com/thoughtminers/tport/main/scripts/install.sh | sh</span>
               <span class="copy-hint">click to copy</span>
             </div>
-            <a href="https://github.com/thoughtminers/devpilot" target="_blank" class="btn-secondary">
+            <a href="https://github.com/thoughtminers/tport" target="_blank" class="btn-secondary">
               <i class="fa-brands fa-github"></i> View on GitHub
             </a>
           </div>
@@ -416,7 +589,7 @@
             <span class="terminal-title">zsh</span>
           </div>
           <div class="terminal-body">
-            <div><span class="t-prompt">→</span> <span class="t-cmd">devpilot start claude</span></div>
+            <div><span class="t-prompt">→</span> <span class="t-cmd">tport start claude</span></div>
             <div class="t-output">Dashboard: <span class="t-url">http://192.168.1.42:3010</span></div>
             <div class="t-output">Session abc123 (claude) started.</div>
             <div class="t-output">Attaching... (session persists if you disconnect)</div>
@@ -444,12 +617,14 @@
         <div class="feature-card">
           <div class="feature-icon"><i class="fa-solid fa-terminal"></i></div>
           <h3>Live Terminal</h3>
-          <p>Full xterm.js rendering in the browser. See real-time output and send input from your phone as if you were at your desk.</p>
+          <p>Full xterm.js rendering in the browser. See real-time output and send input from your phone as if you were
+            at your desk.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon"><i class="fa-solid fa-code-compare"></i></div>
           <h3>Git Diffs</h3>
-          <p>Review staged and unstaged changes with syntax-highlighted diffs. Stage files, unstage them, and commit — all from the dashboard.</p>
+          <p>Review staged and unstaged changes with syntax-highlighted diffs. Stage files, unstage them, and commit —
+            all from the dashboard.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon"><i class="fa-solid fa-folder-open"></i></div>
@@ -459,17 +634,20 @@
         <div class="feature-card">
           <div class="feature-icon"><i class="fa-solid fa-layer-group"></i></div>
           <h3>Multi-session</h3>
-          <p>Run multiple terminal sessions from one daemon. Switch between them in the dashboard — each one persists independently.</p>
+          <p>Run multiple terminal sessions from one daemon. Switch between them in the dashboard — each one persists
+            independently.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon"><i class="fa-solid fa-mobile-screen"></i></div>
           <h3>Mobile-first</h3>
-          <p>Designed for phones first. Clean dark UI, large touch targets, and a virtual keyboard for sending commands on the go.</p>
+          <p>Designed for phones first. Clean dark UI, large touch targets, and a virtual keyboard for sending commands
+            on the go.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon"><i class="fa-solid fa-bolt"></i></div>
           <h3>Zero dependencies</h3>
-          <p>Single binary with Node.js bundled. No tmux, no Docker, no cloud — just one install command and it runs on your machine.</p>
+          <p>Single binary with Node.js bundled. No tmux, no Docker, no cloud — just one install command and it runs on
+            your machine.</p>
         </div>
       </div>
     </div>
@@ -485,12 +663,14 @@
         <div class="step">
           <div class="step-number">1</div>
           <h3>Install</h3>
-          <p>Run the install script. devpilot unpacks to <code>~/.devpilot</code> with a bundled Node.js — no system Node required.</p>
+          <p>Run the install script. tport unpacks to <code>~/.tport</code> with a bundled Node.js — no system Node
+            required.</p>
         </div>
         <div class="step">
           <div class="step-number">2</div>
           <h3>Start a session</h3>
-          <p>Run <code>devpilot start</code> (or <code>devpilot start claude</code>). The dashboard URL is printed immediately.</p>
+          <p>Run <code>tport start</code> (or <code>tport start claude</code>). The dashboard URL is printed
+            immediately.</p>
         </div>
         <div class="step">
           <div class="step-number">3</div>
@@ -507,18 +687,19 @@
         <div class="footer-about">
           <a href="#" class="logo" style="color: #ffffff;">
             <div class="logo-icon"><i class="fa-solid fa-terminal"></i></div>
-            devpilot
+            tport
           </a>
           <p>Remote dev session dashboard. Monitor and interact with your terminal sessions from your phone.</p>
         </div>
         <div class="footer-links">
-          <a href="https://github.com/thoughtminers/devpilot" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a>
-          <a href="https://github.com/thoughtminers/devpilot/releases" target="_blank">Releases</a>
-          <a href="https://github.com/thoughtminers/devpilot/issues" target="_blank">Issues</a>
+          <a href="https://github.com/thoughtminers/tport" target="_blank"><i class="fa-brands fa-github"></i>
+            GitHub</a>
+          <a href="https://github.com/thoughtminers/tport/releases" target="_blank">Releases</a>
+          <a href="https://github.com/thoughtminers/tport/issues" target="_blank">Issues</a>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© 2025 devpilot</span>
+        <span>© 2025 tport</span>
         <span>MIT License</span>
       </div>
     </div>
@@ -559,4 +740,5 @@
   </script>
 
 </body>
+
 </html>

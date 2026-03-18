@@ -1,10 +1,8 @@
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
 import fastifyStatic from '@fastify/static';
 import fastifyWebsocket from '@fastify/websocket';
 import Fastify from 'fastify';
-
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { getFileTree, readFileContent } from './core/files.js';
 import {
   commitStaged,
@@ -23,8 +21,8 @@ import type { SessionManager } from './core/session.js';
 import type { WsClientMessage } from './types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PUBLIC_DIR = process.env.DEVPILOT_ROOT
-  ? path.join(process.env.DEVPILOT_ROOT, 'lib', 'public')
+const PUBLIC_DIR = process.env.TPORT_ROOT
+  ? path.join(process.env.TPORT_ROOT, 'lib', 'public')
   : path.join(__dirname, '..', 'public');
 
 export function createServer(sessionManager: SessionManager) {

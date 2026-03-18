@@ -1,20 +1,18 @@
+import { Command } from 'commander';
 import { execSync, spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-import { Command } from 'commander';
-
 import { getDaemonPaths, isDaemonRunning, sendToDaemon } from './daemon.js';
 import type { DaemonMessage, SessionInfo } from './types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Injected by esbuild at release build time; falls back to package.json
-declare const DEVPILOT_VERSION: string;
+declare const TPORT_VERSION: string;
 const VERSION =
-  typeof DEVPILOT_VERSION !== 'undefined'
-    ? DEVPILOT_VERSION
+  typeof TPORT_VERSION !== 'undefined'
+    ? TPORT_VERSION
     : (
         JSON.parse(
           fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8')
@@ -23,7 +21,7 @@ const VERSION =
 
 function readConfig(): { port?: number } {
   const configDir =
-    process.env.DEVPILOT_ROOT ?? path.join(process.env.HOME ?? '', '.devpilot');
+    process.env.TPORT_ROOT ?? path.join(process.env.HOME ?? '', '.tport');
   try {
     return JSON.parse(
       fs.readFileSync(path.join(configDir, 'config.json'), 'utf-8')
@@ -36,7 +34,7 @@ function readConfig(): { port?: number } {
 }
 
 const config = readConfig();
-const DEFAULT_PORT = String(config.port ?? process.env.DEVPILOT_PORT ?? '3010');
+const DEFAULT_PORT = String(config.port ?? process.env.TPORT_PORT ?? '3010');
 
 function getLocalIp(): string {
   try {
@@ -56,8 +54,8 @@ async function ensureDaemon(port: number): Promise<void> {
   const { dir } = getDaemonPaths();
   fs.mkdirSync(dir, { recursive: true });
 
-  const daemonScript = process.env.DEVPILOT_ROOT
-    ? path.join(process.env.DEVPILOT_ROOT, 'lib', 'daemon.mjs')
+  const daemonScript = process.env.TPORT_ROOT
+    ? path.join(process.env.TPORT_ROOT, 'lib', 'daemon.mjs')
     : path.join(__dirname, 'daemon.js');
   const logFile = path.join(dir, 'daemon.log');
   const out = fs.openSync(logFile, 'a');
@@ -67,7 +65,7 @@ async function ensureDaemon(port: number): Promise<void> {
     stdio: ['ignore', out, out],
     env: {
       ...process.env,
-      DEVPILOT_PORT: String(port),
+      TPORT_PORT: String(port),
     },
   });
 
@@ -139,7 +137,7 @@ async function attachToSession(sessionId: string, port = 3010): Promise<void> {
             if (char === '\r' || char === '\n') {
               if (inputBuffer === DETACH_COMMAND) {
                 console.log('\nDetached. Session continues in background.');
-                console.log(`Reattach with: devpilot attach ${sessionId}`);
+                console.log(`Reattach with: tport attach ${sessionId}`);
                 cleanup();
                 resolve();
                 return;
@@ -220,7 +218,7 @@ async function attachToSession(sessionId: string, port = 3010): Promise<void> {
 const program = new Command();
 
 program
-  .name('devpilot')
+  .name('tport')
   .description('Remote dev session dashboard')
   .version(VERSION);
 
@@ -379,15 +377,13 @@ program
 
 program
   .command('update')
-  .description(
-    'Update devpilot to the latest version (standalone installs only)'
-  )
+  .description('Update tport to the latest version (standalone installs only)')
   .option('--check', 'Check for updates without installing')
   .action(async (opts: { check?: boolean }) => {
-    const root = process.env.DEVPILOT_ROOT;
+    const root = process.env.TPORT_ROOT;
     if (!root) {
       console.error('update: only supported for standalone installs.');
-      console.error('If installed via npm, use: npm update -g devpilot');
+      console.error('If installed via npm, use: npm update -g tport');
       process.exit(1);
     }
 
@@ -396,8 +392,8 @@ program
     ) as { version: string };
 
     const resp = await fetch(
-      'https://api.github.com/repos/thoughtminers/devpilot/releases/latest',
-      { headers: { 'User-Agent': 'devpilot' } }
+      'https://api.github.com/repos/thoughtminers/tport/releases/latest',
+      { headers: { 'User-Agent': 'tport' } }
     );
     if (!resp.ok) {
       console.error(`Failed to fetch release info: HTTP ${resp.status}`);
@@ -420,7 +416,7 @@ program
 
     const platform = process.platform === 'darwin' ? 'darwin' : 'linux';
     const arch = process.arch === 'arm64' ? 'arm64' : 'x64';
-    const tarName = `devpilot-${latestVersion}-${platform}-${arch}.tar.gz`;
+    const tarName = `tport-${latestVersion}-${platform}-${arch}.tar.gz`;
     const sha256Name = `${tarName}.sha256`;
 
     const tarAsset = release.assets.find(a => a.name === tarName);
@@ -431,7 +427,7 @@ program
     }
 
     const tmpDir = fs.mkdtempSync(
-      path.join(path.dirname(root), '.devpilot-update-')
+      path.join(path.dirname(root), '.tport-update-')
     );
     try {
       const tarPath = path.join(tmpDir, tarName);
